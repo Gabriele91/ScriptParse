@@ -9,13 +9,21 @@
     @autor Gabriele Di Bari
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-22 00:24
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-22 21:48
-	@version 0.2
+	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 00:45
+	@version 0.3
 
 	//recursive descent parser (exp) (WORK!!!!)
 
-	*  <statement> := <statement_if> | <statement_while> | <statement_assignament>
-	*  <statement_if> := if  <exp> '{' <statement>  '}'
-	*  <statement_while> := while  <exp> '{' <statement>  '}'
+	*  <statement> := <statement_if> | 
+					  <statement_while> | 
+					  <statement_do> | 
+					  <statement_assignament>
+
+	*  <statement_if> := if '(' <exp> ')' '{' [<statement>]  '}' { <statement_eif> } [ <statement_else> ]
+	*  <statement_eif> := eif '(' <exp> ')' '{' [<statement>]  '}'
+	*  <statement_else> := else '{' [<statement>]  '}'
+	*  <statement_while> := while '(' <exp> ')' '{' [<statement>]  '}'
+	*  <statement_do> := do '{' [<statement>] '}'  while '(' <exp> ')'
 	*  <statement_assignament> := <VARIABLE> '=' <exp>
 	*
 	************************************************
@@ -98,9 +106,18 @@ namespace String{
 struct Tokenizer{
 
 	enum Token{
-	    STRING,
+	    
+		//VARIABLESSS
+		STRING,
 	    VARIABLE,
 		NUMBER, // 12898303...
+		//KEYWORD
+		WHILE,
+		DO,
+		IF,
+		ELSE,
+		EIF,
+		//EXP
 	    ADD,    // +
 		MIN,    // -
 		MUL,    // *
@@ -115,8 +132,12 @@ struct Tokenizer{
 		AND,    // &&
 		LPR,    // (
 		RPR,    // )
-		END,    // EOF
-		INVALID // ???
+		LS,     // {
+		RS,     // }
+		//SPECIAL TOKEN
+		ASSIGNAMENT,// =
+		END,        // EOF
+		INVALID     // ???
 	};
 
 	/**
@@ -145,6 +166,20 @@ struct Tokenizer{
 		std::string tmp;
 
 		switch (type){
+		case Tokenizer::IF:
+			return "if";
+			break;
+		case Tokenizer::EIF:
+			return "eif";
+			break;
+		case Tokenizer::ELSE:
+			return "else";
+			break;
+		case Tokenizer::DO:
+			return "do";
+		case Tokenizer::WHILE:
+			return "while";
+			break;		
 		case Tokenizer::VARIABLE:		
 			/* parse variable */
 			return GetVariable();
@@ -199,6 +234,9 @@ struct Tokenizer{
 		case Tokenizer::RPR:
 			return ")";
 			break;
+		case Tokenizer::ASSIGNAMENT:
+			return "=";
+			break;
 		case Tokenizer::END:
 			return "\0";
 			break;
@@ -218,6 +256,7 @@ struct Tokenizer{
 	Token type;
 	int countline;
 
+	/* VARIABLESSS */
 	bool IsNumber(){
 		bool isnumber=(*pointer>47)&&(*pointer<58);// 0-9
 		bool isvalidpoint=(*pointer==46) && 
@@ -346,7 +385,9 @@ struct Tokenizer{
 				}
 			return false;
 	}
-	
+
+	/* EXP */
+
 	bool IsLogicAnd(){
 		return (*pointer=='&') && (*(pointer+1)=='&');
 	}
@@ -356,7 +397,7 @@ struct Tokenizer{
 	void SkipLogicAO(){
 		pointer+=2;
 	}
-		
+	
 	bool IsEQ(){
 		return (*pointer=='<') && (*(pointer+1)=='=');
 	}
@@ -370,6 +411,49 @@ struct Tokenizer{
 		pointer+=2;
 	}
 
+	/* key words */
+	bool IsIf(){
+		return (*pointer=='i') && (*(pointer+1)=='f');		
+	}	
+	bool IsEIf(){
+		return (*pointer=='e') && 
+			   (*(pointer+1)=='i') && 
+			   (*(pointer+2)=='f');		
+	}	
+	bool IsElse(){
+		return (*pointer=='e') && 
+			   (*(pointer+1)=='l') && 
+			   (*(pointer+2)=='s') && 
+			   (*(pointer+3)=='e');		
+	}
+	bool IsDo(){
+		return (*pointer=='d') && (*(pointer+1)=='o');		
+	}
+	bool IsWhile(){
+		return (*pointer=='w') && 
+			   (*(pointer+1)=='h') && 
+			   (*(pointer+2)=='i') && 
+			   (*(pointer+3)=='l') && 
+			   (*(pointer+4)=='e');		
+	}
+
+	void SkipIf(){
+		pointer+=2;
+	}
+	void SkipEIf(){
+		pointer+=3;
+	}
+	void SkipElse(){
+		pointer+=4;
+	}
+	void SkipDo(){
+		pointer+=2;
+	}
+	void SkipWhile(){
+		pointer+=5;
+	}
+	
+	/* Skeep */
 	void SkipWhiteSpace(){
 		while((*pointer)==' ' || (*pointer)=='\t'||
 			  (*pointer)=='\r'|| (*pointer)=='\n'){
@@ -383,14 +467,21 @@ struct Tokenizer{
 		}
 	}	
 	
-	// -->[112]-->[+]--> 
+	/* Token parse */
 	void DeterminateToken(){
 		//
 		SkipWhiteSpace();
-		//is a number
-		if(IsVariable())  type=VARIABLE; else 
-		if(IsNumber())  type=NUMBER; else 
-		if(IsString())  type=STRING; else 
+		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
+		if(IsIf())			type=IF; else 
+		if(IsEIf())			type=EIF; else 
+		if(IsElse())		type=ELSE; else 
+		if(IsDo())			type=DO; else 
+		if(IsWhile())		type=WHILE; else 
+		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
+		if(IsVariable())    type=VARIABLE; else 
+		if(IsNumber())		type=NUMBER; else 
+		if(IsString())		type=STRING; else 
+
 		if(*pointer == '+') type=ADD; else
 		if(*pointer == '-') type=MIN; else
 		if(*pointer == '*') type=MUL; else
@@ -403,17 +494,30 @@ struct Tokenizer{
 		if(IsLTE())			type=LTE; else
 		if(IsLogicAnd())    type=AND; else
 		if(IsLogicOr())     type=OR; else
+
 		if(*pointer == '(') type=LPR; else
 		if(*pointer == ')') type=RPR; else
+		if(*pointer == '{') type=LS; else
+		if(*pointer == '}') type=RS; else
+
+		/* special key to be searched after exp */			
+		if(*pointer == '=')  type=ASSIGNAMENT; else
 		if(*pointer == '\0') type=END; else
 		type=INVALID;
 	}
 	void SkipToken(){		
 		SkipWhiteSpace();
-		
+		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
+		if(type==IF)	 SkipIf(); else
+		if(type==EIF)	 SkipEIf(); else
+		if(type==ELSE)   SkipElse(); else
+		if(type==DO)	 SkipDo(); else
+		if(type==WHILE)  SkipWhile(); else
+		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */		
 		if(type==VARIABLE) SkipVariable(); else
 		if(type==NUMBER) SkipNumber(); else
 		if(type==STRING) SkipString(); else
+
 		if(type==ADD) ++pointer; else
 		if(type==MIN) ++pointer; else
 		if(type==MUL) ++pointer; else
@@ -426,8 +530,13 @@ struct Tokenizer{
 		if(type==LTE) SkipEGL(); else
 		if(type==AND) SkipLogicAO(); else
 		if(type==OR)  SkipLogicAO(); else
+
 		if(type==LPR) ++pointer; else
-		if(type==RPR) ++pointer;
+		if(type==RPR) ++pointer; else
+		if(type==LS) ++pointer; else
+		if(type==RS) ++pointer; else			
+		/* special key to be searched after exp */
+		if(type==ASSIGNAMENT) ++pointer;
 
 	}
 
@@ -518,6 +627,8 @@ struct REParse{
 
 	
 	#define NOT(X) !(X)
+	#define NOTTOKEN(X) (tkn.GetToken()!=Tokenizer::X)
+	#define ISTOKEN(X) (tkn.GetToken()==Tokenizer::X)
 	std::string script;
 	Tokenizer tkn;
 	
@@ -685,13 +796,146 @@ struct REParse{
 		return tree ? tree : left;
 	}
 
+	TreeNode* ParseIf(){	
+		TreeNode *leaf=NULL;
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		//LPR '(' ?
+			tkn.NextToken();
+			if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+			//<exp>
+			tkn.NextToken();
+			if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
+			tree->PushChild(leaf);
+			//RPR ')' ? 
+			if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+			//LS '{' ?
+			tkn.NextToken();
+			if(NOTTOKEN(LS)){ delete tree; return NULL; }
+			// <statement>  | '}'
+			tkn.NextToken();
+			if(NOTTOKEN(RS)){ 
+				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
+				tree->PushChild(leaf);
+				//RS '}' ?
+				if(NOTTOKEN(RS)){ delete tree; return NULL; }	 
+			}		
+			/* eif/else/other */
+			tkn.NextToken();
+			/* { eif '{' [ <statement> ] '}' } */
+			while (ISTOKEN(EIF)) { 
+				if(NOT(leaf=ParseEIf())){ delete tree; return NULL; }
+				tree->PushChild(leaf);
+			}
+			/*[ else '{' [ <statement> ] '}' ]*/
+			if(NOTTOKEN(ELSE)){ return tree; }
+			if(NOT(leaf=ParseElse())){ delete tree; return NULL; }
+			tree->PushChild(leaf);
+
+			return tree;
+	}
+	TreeNode* ParseEIf(){
+			/* make else tree */
+			TreeNode *leaf=NULL;
+			TreeNode *tree= new TreeNode(tkn.GetLine(),
+										 tkn.GetToken(),
+									     tkn.TokenValue());			
+			//LPR '(' ?
+			tkn.NextToken();
+			if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+			//<exp>
+			tkn.NextToken();
+			if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
+			tree->PushChild(leaf);
+			//RPR ')' ? 
+			if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+			//LS '{' ?
+			tkn.NextToken();
+			if(NOTTOKEN(LS)){ delete tree; return NULL; }
+			// <statement>  | '}'
+			tkn.NextToken();
+			if(NOTTOKEN(RS)){ 
+				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
+				tree->PushChild(leaf);
+				//RS '}' ?
+				if(NOTTOKEN(RS)){ delete tree; return NULL; }	 
+			}		
+			/* '}' */
+			tkn.NextToken();
+			return tree;
+	}
+	TreeNode* ParseElse(){
+			/* make else tree */
+			TreeNode *leaf=NULL;
+			TreeNode *tree= new TreeNode(tkn.GetLine(),
+										 tkn.GetToken(),
+									     tkn.TokenValue());			
+			//LS '{' ?
+			tkn.NextToken();
+			if(NOTTOKEN(LS)){ delete tree; return NULL; }
+			// <statement>  | '}'
+			tkn.NextToken();
+			if(NOTTOKEN(RS)){ 
+				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
+				tree->PushChild(leaf);
+				//RS '}' ?
+				if(NOTTOKEN(RS)){ delete tree; return NULL; }	 
+			}
+			//end 'else' '{' .. '}'
+			tkn.NextToken();
+			return tree;
+	}
+
+	TreeNode* ParseAssignament(){	
+		//<variable>
+		TreeNode *left=new TreeNode(tkn.GetLine(),
+									tkn.GetToken(),
+									tkn.TokenValue());
+		// '='
+		tkn.NextToken();
+		if(NOTTOKEN(ASSIGNAMENT)){ delete left; return NULL; }
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+
+		//add <variable>
+		tree->PushChild(left);
+
+		//<exp>
+		TreeNode *right=NULL;
+		tkn.NextToken();
+		if(NOT(right=ParseExp())){ delete tree; return NULL; }
+		//add <exp>
+		tree->PushChild(right);
+		//
+
+		return tree;
+	}
+	TreeNode* ParseStatement(){
+		switch (tkn.GetToken())
+		{
+		case Tokenizer::IF:
+			return ParseIf();
+		break;
+		case Tokenizer::VARIABLE: //assignament
+			return ParseAssignament();
+		break;
+		default:
+			 return NULL; 
+		break;
+		}
+	}
+
 	TreeNode* StartParse(const std::string & script){
 		this->script=script;
 		tkn.SetScript(this->script.c_str());
 		tkn.Start();
-		return ParseExp();
+		return ParseStatement();
 	}
 	#undef NOT
+	#undef NOTTOKEN
+	#undef ISTOKEN
 };
 
 #include <iostream>
@@ -701,6 +945,21 @@ std::string GetStringToken(Tokenizer::Token token){
 
 	switch (token)
 	{
+	case Tokenizer::IF:
+		return "IF";
+		break;
+	case Tokenizer::EIF:
+		return "EIF";
+		break;
+	case Tokenizer::ELSE:
+		return "ELSE";
+		break;
+	case Tokenizer::DO:
+		return "DO";
+		break;
+	case Tokenizer::WHILE:
+		return "WHILE";
+		break;
 	case Tokenizer::VARIABLE:
 		return "VARIABLE";
 		break;
@@ -743,6 +1002,12 @@ std::string GetStringToken(Tokenizer::Token token){
 	case Tokenizer::RPR:
 		return "RPR )";
 		break;
+	case Tokenizer::LS:
+		return "LPR {";
+		break;
+	case Tokenizer::RS:
+		return "RPR }";
+		break;
 	case Tokenizer::NOT:
 		return "NOT !";
 		break;
@@ -751,6 +1016,9 @@ std::string GetStringToken(Tokenizer::Token token){
 		break;
 	case Tokenizer::OR:
 		return "OR ||";
+		break;
+	case Tokenizer::ASSIGNAMENT:
+		return "ASSIGNAMENT =";
 		break;
 	case Tokenizer::END:
 		return "END";
@@ -767,7 +1035,11 @@ std::string GetStringToken(Tokenizer::Token token){
 
 int main(){
 
-	std::string scriptexp("-2*-A > 5+1");
+	std::string scriptexp("if ( -2*-A > 5+1 ) { }"
+						  "eif (0){ a=c+d } "
+						  "else {"
+						  "if( 3+2 ) {}"
+						  "} ");
 	std::cout << scriptexp << "\n\ntest Tokenizer:\n\n";
 	/* test Tokenizer */
 	Tokenizer tkn;
