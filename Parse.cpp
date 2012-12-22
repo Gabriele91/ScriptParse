@@ -8,12 +8,24 @@
 
     @autor Gabriele Di Bari
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-22 00:24
-	@version 0.1
+	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-22 21:48
+	@version 0.2
 
 	//recursive descent parser (exp) (WORK!!!!)
 
-	*   exp := [ <base> | <op_mono><base> ]	
-	*	op_mono: '-'
+	*  <statement> := <statement_if> | <statement_while> | <statement_assignament>
+	*  <statement_if> := if  <exp> '{' <statement>  '}'
+	*  <statement_while> := while  <exp> '{' <statement>  '}'
+	*  <statement_assignament> := <VARIABLE> '=' <exp>
+	*
+	************************************************
+	*** EXPRESCION PARSE ***************************
+	************************************************
+	*   exp :=  <compare> { <op_logic> <compare> }	
+	*	op_logic: '&&' | '||'
+
+	*   compare := <base> { <op_compare> <base> }
+	*   op_compare := '=='| '<' | '>' | '<=' | '>='
 
 	*   base  := <term> { <op_livel1> <term> }
 	*	op_livel1 : '+' | '-'
@@ -21,7 +33,8 @@
 	*   term := <factor> { <op_livel2> <factor> }
 	*	op_livel2 : '*' | '/'
 
-	*   factor := <NUMBER> | <VARIABLE> | '(' <exp> ')'
+	*   factor := [<unary_op>] <NUMBER> | [<unary_op>] <VARIABLE> | <STRING> | '(' <exp> ')'
+	*   unary_op := '-' | '!'
 
 	struct REParse{
 	    [...]
@@ -85,13 +98,21 @@ namespace String{
 struct Tokenizer{
 
 	enum Token{
-	  //STRING,
-	  //VARIABLE,
+	    STRING,
+	    VARIABLE,
 		NUMBER, // 12898303...
 	    ADD,    // +
 		MIN,    // -
 		MUL,    // *
 		DIV,    // /
+		EQ,     // ==
+		GT,     // >
+		LT,     // <
+		GTE,    // >=
+		LTE,    // <=
+		NOT,    // !
+		OR,     // ||
+		AND,    // &&
 		LPR,    // (
 		RPR,    // )
 		END,    // EOF
@@ -120,10 +141,22 @@ struct Tokenizer{
 		DeterminateToken();
 	}
 	std::string TokenValue(){
+
+		std::string tmp;
+
 		switch (type){
+		case Tokenizer::VARIABLE:		
+			/* parse variable */
+			return GetVariable();
+			break;
 		case Tokenizer::NUMBER:		
 			/* parse number */
 			return GetNumber();
+			break;
+		case Tokenizer::STRING:		
+			/* parse string */
+			GetCString(tmp);
+			return tmp;
 			break;
 		case Tokenizer::ADD:
 			return "+";
@@ -136,6 +169,29 @@ struct Tokenizer{
 			break;
 		case Tokenizer::DIV:
 			return "/";
+		case Tokenizer::EQ:
+			return "==";
+			break;		
+		case Tokenizer::GT:
+			return ">";
+			break;		
+		case Tokenizer::LT:
+			return "<";
+			break;		
+		case Tokenizer::GTE:
+			return ">=";
+			break;		
+		case Tokenizer::LTE:
+			return "<=";
+			break;
+		case Tokenizer::NOT:
+			return "!";
+			break;		
+		case Tokenizer::AND:
+			return "&&";
+			break;		
+		case Tokenizer::OR:
+			return "||";
 			break;
 		case Tokenizer::LPR:
 			return "(";
@@ -162,20 +218,167 @@ struct Tokenizer{
 	Token type;
 	int countline;
 
-	bool IsCharNumber(){
-		return (*pointer>47)&&(*pointer<58);
+	bool IsNumber(){
+		bool isnumber=(*pointer>47)&&(*pointer<58);// 0-9
+		bool isvalidpoint=(*pointer==46) && 
+						  (*(pointer+1)>47) &&
+						  (*(pointer+1)<58); // .0-9
+		return isnumber||isvalidpoint;
 	}
 	std::string GetNumber(){
 			const char* tmp=pointer;
-			while(IsCharNumber()) ++pointer;
+			while(IsNumber()) ++pointer;
 			std::string tokenvalue(tmp,pointer-tmp);				
 			pointer=tmp;
 			return tokenvalue;
 	}
+	void SkipNumber(){		
+		while(IsNumber()) ++pointer;
+	}
+
+	bool IsVariable(){
+		return ((*pointer>='A')&&(*pointer<='Z')) ||
+			   ((*pointer>='a')&&(*pointer<='z')) ||
+			   ((*pointer)=='_');
+	}	
+	bool IsVariableAfter(){
+		return ((*pointer>='A')&&(*pointer<='Z')) ||
+			   ((*pointer>='a')&&(*pointer<='z'))||
+			   ((*pointer>='0')&&(*pointer<='9'))||
+			   ((*pointer)=='_');
+	}
+	std::string GetVariable(){
+			const char* tmp=pointer;		
+			if(IsVariable()) ++pointer;
+			while(IsVariableAfter()) ++pointer;
+			std::string tokenvalue(tmp,pointer-tmp);				
+			pointer=tmp;
+			return tokenvalue;
+	}
+	void SkipVariable(){		
+		if(IsVariable()) ++pointer;
+		while(IsVariableAfter()) ++pointer;
+	}
+
+	bool IsString(){
+		const char *tmp=pointer;
+		if(SkipString()){
+			pointer=tmp;
+			return true;
+		}
+		return false;
+	}		
+	bool GetCString(std::string& out){
+			const char *tmp=pointer;
+			out="";
+			if((*tmp)=='\"'){ //["...."]
+				++tmp;  //[...."]
+				while((*tmp)!='\"'&&(*tmp)!='\n'){
+					if((*tmp)=='\\'){//[\.]
+						++tmp;  //[.]
+						switch(*tmp){
+							case 'n': out+='\n'; break;
+							case 't': out+='\t'; break;
+							case 'b': out+='\b'; break;
+							case 'r': out+='\r'; break;
+							case 'f': out+='\f'; break;
+							case 'a': out+='\a'; break;
+							case '\\': out+='\\'; break;
+							case '?':  out+='\?'; break;
+							case '\'': out+='\''; break;
+							case '\"': out+='\"'; break;
+							case '\n': /* jump unix */ break;
+							case '\r': /* jump mac */
+								if((*(tmp+1))=='\n') ++tmp; /* jump window (\r\n)*/
+							break;
+								default: return false; break;
+							}
+						}
+						else{
+							if((*tmp)!='\0') out+=(*tmp);
+							else return false;
+						}
+						++tmp;//next char
+					}
+					if((*tmp)=='\n') return false;
+					return true;
+				}
+			return false;
+	}
+	bool SkipString(){
+			if((*pointer)=='\"'){ //["...."]
+				++pointer;  //[...."]
+				while((*pointer)!='\"'&&(*pointer)!='\n'){
+					if((*pointer)=='\\'){//[\.]
+						++pointer;  //[.]
+						switch(*pointer){
+							case 'n':
+							case 't':
+							case 'b':
+							case 'r': 
+							case 'f':
+							case 'a': 
+							case '\\':
+							case '?':  
+							case '\'': 
+							case '\"': break;
+							case '\n': /* jump unix */ 
+								++this->countline;
+							break;
+							case '\r': /* jump mac OS */
+								if((*(pointer+1))=='\n') ++pointer; /* jump window (\r\n)*/
+								++this->countline; 
+							break;
+								default: return false; break;
+							}
+						}
+						else{
+							if((*pointer)!='\0');
+							else return false;
+						}
+						++pointer;//next char
+					}
+					if((*pointer)=='\n') return false;
+					//SKEEP! \"
+					++pointer;
+					//
+					return true;
+				}
+			return false;
+	}
+	
+	bool IsLogicAnd(){
+		return (*pointer=='&') && (*(pointer+1)=='&');
+	}
+	bool IsLogicOr(){
+		return (*pointer=='|') && (*(pointer+1)=='|');
+	}
+	void SkipLogicAO(){
+		pointer+=2;
+	}
+		
+	bool IsEQ(){
+		return (*pointer=='<') && (*(pointer+1)=='=');
+	}
+	bool IsGTE(){
+		return (*pointer=='>') && (*(pointer+1)=='=');
+	}	
+	bool IsLTE(){
+		return (*pointer=='<') && (*(pointer+1)=='=');
+	}
+	void SkipEGL(){		
+		pointer+=2;
+	}
+
 	void SkipWhiteSpace(){
 		while((*pointer)==' ' || (*pointer)=='\t'||
 			  (*pointer)=='\r'|| (*pointer)=='\n'){
+
+			  if((*pointer)=='\r')
+			  { ++countline; pointer+=(*(pointer+1)=='\n'); }
+			  else 
 			  countline+=((*pointer)=='\n');
+
 			  ++pointer;
 		}
 	}	
@@ -185,11 +388,21 @@ struct Tokenizer{
 		//
 		SkipWhiteSpace();
 		//is a number
-		if(IsCharNumber()) type=NUMBER; else 
+		if(IsVariable())  type=VARIABLE; else 
+		if(IsNumber())  type=NUMBER; else 
+		if(IsString())  type=STRING; else 
 		if(*pointer == '+') type=ADD; else
 		if(*pointer == '-') type=MIN; else
 		if(*pointer == '*') type=MUL; else
 		if(*pointer == '/') type=DIV; else
+		if(*pointer == '!') type=NOT; else
+		if(*pointer == '>') type=GT; else
+		if(*pointer == '<') type=LT; else
+		if(IsEQ())			type=EQ; else
+		if(IsGTE())			type=GTE; else
+		if(IsLTE())			type=LTE; else
+		if(IsLogicAnd())    type=AND; else
+		if(IsLogicOr())     type=OR; else
 		if(*pointer == '(') type=LPR; else
 		if(*pointer == ')') type=RPR; else
 		if(*pointer == '\0') type=END; else
@@ -197,14 +410,22 @@ struct Tokenizer{
 	}
 	void SkipToken(){		
 		SkipWhiteSpace();
-
-		if(type==NUMBER) 
-			while(IsCharNumber()) ++pointer;
-		else
+		
+		if(type==VARIABLE) SkipVariable(); else
+		if(type==NUMBER) SkipNumber(); else
+		if(type==STRING) SkipString(); else
 		if(type==ADD) ++pointer; else
 		if(type==MIN) ++pointer; else
 		if(type==MUL) ++pointer; else
 		if(type==DIV) ++pointer; else
+		if(type==NOT) ++pointer; else
+		if(type==GT)  ++pointer; else
+		if(type==LT)  ++pointer; else
+		if(type==EQ)  SkipEGL(); else
+		if(type==GTE) SkipEGL(); else
+		if(type==LTE) SkipEGL(); else
+		if(type==AND) SkipLogicAO(); else
+		if(type==OR)  SkipLogicAO(); else
 		if(type==LPR) ++pointer; else
 		if(type==RPR) ++pointer;
 
@@ -301,16 +522,42 @@ struct REParse{
 	Tokenizer tkn;
 	
 	TreeNode* ParserFactor(){
-		
-		if(tkn.GetToken()==Tokenizer::NUMBER /* 1920.. or <VARIABLE> */ ){
+		/* unary op, '-' | '!' */
+		TreeNode *newnode=NULL;
+		if(tkn.GetToken()==Tokenizer::MIN ||  tkn.GetToken()==Tokenizer::NOT){
+			newnode=new TreeNode(tkn.GetLine(),
+							     tkn.GetToken(),
+							     tkn.TokenValue());	
+			tkn.NextToken();	
+		}
+
+		if(tkn.GetToken()==Tokenizer::NUMBER ||
+		  (tkn.GetToken()==Tokenizer::STRING && NOT(newnode)) ||
+		   tkn.GetToken()==Tokenizer::VARIABLE ){
 			TreeNode *node=new TreeNode(tkn.GetLine(),
 										tkn.GetToken(),
-										 tkn.TokenValue());	
+										tkn.TokenValue());			
 			tkn.NextToken();
-			return node;
+			/* after 
+			   number/variable/string 
+			   can't following another  
+			   number/variable/string */
+			if(	tkn.GetToken()==Tokenizer::NUMBER ||
+				tkn.GetToken()==Tokenizer::STRING ||
+				tkn.GetToken()==Tokenizer::VARIABLE ){
+				delete newnode;
+				delete node;
+				return NULL;
+			}
+			/* if not unary op */
+			if(NOT(newnode)) 
+				return node;
+			/* else after a unary op */
+			newnode->PushChild(node);
+			return newnode;
 		}
-		else
-		if(tkn.GetToken()==Tokenizer::LPR){ // '('
+
+		if(NOT(newnode) && tkn.GetToken()==Tokenizer::LPR){ // '('
 			tkn.NextToken();
 			TreeNode *node=ParseExp();
 			if(tkn.GetToken()==Tokenizer::RPR){// ')'
@@ -378,26 +625,64 @@ struct REParse{
 		}
 		return tree ? tree : left;
 	}
+	TreeNode* ParseCompare(){	
+		/* nodes */
+		TreeNode *left=NULL;
+		TreeNode *tree=NULL;
+		TreeNode *right=NULL;
+		/* nodes */	
+		if(NOT(left=ParseBase())) return NULL; //<base>
+		while(tkn.GetToken()==Tokenizer::EQ ||
+			  tkn.GetToken()==Tokenizer::GT ||
+			  tkn.GetToken()==Tokenizer::LT ||
+			  tkn.GetToken()==Tokenizer::GTE||
+			  tkn.GetToken()==Tokenizer::LTE){ //'==' | '>' | '<' | '>=' | '<=' 
+				//before tree				  
+				if(tree) left=tree;
+				/* make tree */
+				tree= new TreeNode(tkn.GetLine(),
+								   tkn.GetToken(),
+								    tkn.TokenValue());
+
+				tkn.NextToken();
+				//<base>
+				if(NOT(right=ParseBase())){ 				
+					delete left;
+					delete tree;
+					return NULL;
+				} 
+			  tree->PushChild(left);
+			  tree->PushChild(right);
+		}
+		return tree ? tree : left;
+	}
 	TreeNode* ParseExp(){
 		/* nodes */
-		TreeNode *root=NULL;
-		TreeNode *leaf=NULL;
-		/* nodes */
-		if(NOT(root=ParseBase())){ // <base>
-			if(tkn.GetToken()==Tokenizer::MIN){//'-' <base>			  
-			  TreeNode *left=new TreeNode(tkn.GetLine(),
-								          tkn.GetToken(),
-								          tkn.TokenValue());
-			  tkn.NextToken();
-			  if(NOT(leaf=ParseBase())){
-				  delete root;
-				  return NULL;
-			  }
-			  root->PushChild(leaf);
-			}else
-			   return NULL;
+		TreeNode *left=NULL;
+		TreeNode *tree=NULL;
+		TreeNode *right=NULL;
+		/* nodes */	
+		if(NOT(left=ParseCompare())) return NULL; //<compare>
+		while(tkn.GetToken()==Tokenizer::AND||
+			  tkn.GetToken()==Tokenizer::OR){ //'&&' | '||' 
+				//before tree				  
+				if(tree) left=tree;
+				/* make tree */
+				tree= new TreeNode(tkn.GetLine(),
+								   tkn.GetToken(),
+								   tkn.TokenValue());
+
+				tkn.NextToken();
+				//<compare>
+				if(NOT(right=ParseCompare())){ 				
+					delete left;
+					delete tree;
+					return NULL;
+				} 
+			  tree->PushChild(left);
+			  tree->PushChild(right);
 		}
-		return root;
+		return tree ? tree : left;
 	}
 
 	TreeNode* StartParse(const std::string & script){
@@ -416,8 +701,14 @@ std::string GetStringToken(Tokenizer::Token token){
 
 	switch (token)
 	{
+	case Tokenizer::VARIABLE:
+		return "VARIABLE";
+		break;
 	case Tokenizer::NUMBER:
 		return "NUMBER";
+		break;
+	case Tokenizer::STRING:
+		return "STRING";
 		break;
 	case Tokenizer::ADD:
 		return "ADD +";
@@ -431,11 +722,35 @@ std::string GetStringToken(Tokenizer::Token token){
 	case Tokenizer::DIV:
 		return "DIV /";
 		break;
+	case Tokenizer::EQ:
+		return "EQ ==";
+		break;
+	case Tokenizer::GT:
+		return "GT >";
+		break;
+	case Tokenizer::LT:
+		return "LT <";
+		break;
+	case Tokenizer::GTE:
+		return "GTE >=";
+		break;
+	case Tokenizer::LTE:
+		return "LTE <=";
+		break;
 	case Tokenizer::LPR:
 		return "LPR (";
 		break;
 	case Tokenizer::RPR:
 		return "RPR )";
+		break;
+	case Tokenizer::NOT:
+		return "NOT !";
+		break;
+	case Tokenizer::AND:
+		return "AND &&";
+		break;
+	case Tokenizer::OR:
+		return "OR ||";
 		break;
 	case Tokenizer::END:
 		return "END";
@@ -452,7 +767,7 @@ std::string GetStringToken(Tokenizer::Token token){
 
 int main(){
 
-	std::string scriptexp("1+2*5-(4-3)");
+	std::string scriptexp("-2*-A > 5+1");
 	std::cout << scriptexp << "\n\ntest Tokenizer:\n\n";
 	/* test Tokenizer */
 	Tokenizer tkn;
