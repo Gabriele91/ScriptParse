@@ -11,7 +11,8 @@
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-22 21:48
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 00:45
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 11:35
-	@version 0.4
+	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 16:15
+	@version 0.4.5
 
 	//recursive descent parser (exp) (WORK!!!!)
 
@@ -42,8 +43,8 @@
 	*   term := <factor> { <op_livel2> <factor> }
 	*	op_livel2 : '*' | '/'
 
-	*   factor := [<unary_op>] <NUMBER> | [<unary_op>] <VARIABLE> | <STRING> | '(' <exp> ')'
-	*   unary_op := '-' | '!'
+	*   factor := [<unitary_op>] <NUMBER> | [<unitary_op>] <VARIABLE> | <STRING> | '(' <exp> ')'
+	*   unitary_op := '-' | '!'
 
 	struct REParse{
 	    [...]
@@ -107,7 +108,6 @@ namespace String{
 struct Tokenizer{
 
 	enum Token{
-	    
 		//VARIABLESSS
 		STRING,
 	    VARIABLE,
@@ -559,7 +559,123 @@ struct Tokenizer{
 	
 };
 
+/**
+*  Class management errors
+*/
+struct ErrorParse{
 
+		enum ErrorType{
+				//STATEMENT
+				EXP=0,
+				STATEMENT,
+				//
+                PARSE,
+                VARIABLE,
+                NUMBER,
+                STRING,
+
+                DO,
+                IF,
+                EIF,
+                ELSE,
+                WHILE,
+
+                EQ,
+                GT,
+                LT,
+                GTE,
+                LTE,
+
+				AND,
+				OR,
+
+				ADD,
+				MIN,
+				MUL,
+				DIV,
+
+				LPR,
+				RPR,
+				LS,
+				RS,
+
+				ASSIGNAMENT,
+				END,
+				INVALID     
+
+
+            };
+		struct Error{ 
+				unsigned int line; 
+				unsigned char error;
+				const char    *addictioninfo;
+			};
+		std::vector<Error> errors;
+		static const char *ErrorString[];
+
+		void PushError(unsigned int line, 
+					   unsigned char errorType, 
+					   const char *addictioninfo){
+                Error error;
+                error.line=line;
+                error.error=errorType;
+                error.addictioninfo=addictioninfo;
+                errors.push_back(error);
+            }
+
+		std::string ToString(){		
+			std::string out;
+			for(int i=0;i<errors.size();++i){
+				out+="error:"
+					 +String::ToString(errors[i].line)+":"
+					 +ErrorString[errors[i].error]
+					 +(errors[i].addictioninfo? std::string(", ")+errors[i].addictioninfo:"")
+					 +"\n";
+			}
+			return out;
+		}
+
+        };
+
+const char *ErrorParse::ErrorString[]={
+				//STATEMENT
+				"invalid expression",//EXP,
+				"invalid statement", //STATEMENT
+				//
+                "invalid parse",  //PARSE,
+                "invalid variable", //VARIABLE,
+                "invalid number", //NUMBER,
+                "invalid string", //STRING,
+
+                "'do-while' parse error", //DO,
+                "'if' parse error", //IF,
+                "'eif' parse error", //EIF,
+                "'else' parse error", //ELSE,
+                "'while' parse error", //WHILE,
+
+                "'==' parse error",//EQ,
+                "'>' parse error",//GT,
+                "'<' parse error",//LT,
+                "'>=' parse error",//GTE,
+                "'<=' parse error",//LTE,
+
+				"'&&' parse error",//AND,
+				"'||' parse error",//OR,
+
+				"'+' parse error",//ADD,
+				"'-' parse error",//MIN,
+				"'*' parse error",//MUL,
+				"'/' parse error",//DIV,
+
+				"'(' parse error",//LPR,
+				"')' parse error",//RPR,
+				"'{' parse error",//LS,
+				"'}' parse error",//RS,
+
+				"'=' parse error",//ASSIGNAMENT,
+				"EOF parse error",//END,
+				"indeterminate parse error",//INVALID    
+};
 /**
 *  Tree struct
 */
@@ -647,11 +763,17 @@ struct REParse{
 	#define ISTOKEN(X) (tkn.GetToken()==Tokenizer::X)
 	#define NOTNEXTTOKEN(X) (tkn.GetNextToken()!=Tokenizer::X)
 	#define ISNEXTTOKEN(X) (tkn.GetNextToken()==Tokenizer::X)
+	#define ERROR_(X) errors.PushError(tkn.GetLine(),ErrorParse::X,0)
+	#define ERROR_I(X,I) errors.PushError(tkn.GetLine(),ErrorParse::X,I)
+	#define ERROR_L(X,I,L) errors.PushError(L,ErrorParse::X,I)
+	#define IFTREETKIS(X,Y) X->token==Tokenizer::Y
 	std::string script;
 	Tokenizer tkn;
+	ErrorParse errors;
+
 	
 	TreeNode* ParserFactor(){
-		/* unary op, '-' | '!' */
+		/* unitary op, '-' | '!' */
 		TreeNode *newnode=NULL;
 		if(ISTOKEN(MIN) || tkn.GetToken()==Tokenizer::NOT){
 			newnode=new TreeNode(tkn.GetLine(),
@@ -676,12 +798,13 @@ struct REParse{
 			   (ISTOKEN(VARIABLE) && NOTNEXTTOKEN(ASSIGNAMENT))){
 				delete newnode;
 				delete node;
+				ERROR_I(EXP,"not found operator");
 				return NULL;
 			}
-			/* if not unary op */
+			/* if not unitary op */
 			if(NOT(newnode)) 
 				return node;
-			/* else after a unary op */
+			/* else after a unitary op */
 			newnode->PushChild(node);
 			return newnode;
 		}
@@ -693,9 +816,15 @@ struct REParse{
 				tkn.NextToken();
 				return node; 
 			}
+			ERROR_(RPR,"not found");
 			delete node;
 			return NULL;
-		}		 
+		}
+		if(newnode) 
+			ERROR_I(EXP,"invalid unitary operator");
+		else 
+			ERROR_I(EXP,"void expression");
+				 
 		return NULL;
 	}
 	TreeNode* ParseTerm(){
@@ -716,7 +845,11 @@ struct REParse{
 
 			  tkn.NextToken();
 			  //<Factor>
-			  if(NOT(right=ParserFactor())){ 				
+			  if(NOT(right=ParserFactor())){ 
+				   if(IFTREETKIS(tree,MUL))
+						ERROR_I(MUL,"invalid right factor");
+				   if(IFTREETKIS(tree,DIV))
+						ERROR_I(DIV,"invalid right factor");
 					delete left;
 					delete tree;
 					return NULL;
@@ -744,7 +877,11 @@ struct REParse{
 
 				tkn.NextToken();
 				//<term>
-				if(NOT(right=ParseTerm())){ 				
+				if(NOT(right=ParseTerm())){ 	
+				   if(IFTREETKIS(tree,ADD))
+						ERROR_I(ADD,"invalid right factor");
+				   if(IFTREETKIS(tree,MIN))
+						ERROR_I(MIN,"invalid right factor");			
 					delete left;
 					delete tree;
 					return NULL;
@@ -775,7 +912,17 @@ struct REParse{
 
 				tkn.NextToken();
 				//<base>
-				if(NOT(right=ParseBase())){ 				
+				if(NOT(right=ParseBase())){  	
+				   if(IFTREETKIS(tree,EQ))
+						ERROR_I(EQ,"invalid right factor");
+				   if(IFTREETKIS(tree,GT))
+						ERROR_I(LT,"invalid right factor");	  	
+				   if(IFTREETKIS(tree,LT))
+						ERROR_I(GT,"invalid right factor");
+				   if(IFTREETKIS(tree,GT))
+						ERROR_I(LTE,"invalid right factor");	  	
+				   if(IFTREETKIS(tree,EQ))
+						ERROR_I(GTE,"invalid right factor");				
 					delete left;
 					delete tree;
 					return NULL;
@@ -803,7 +950,11 @@ struct REParse{
 
 				tkn.NextToken();
 				//<compare>
-				if(NOT(right=ParseCompare())){ 				
+				if(NOT(right=ParseCompare())){ 		  	
+				   if(IFTREETKIS(tree,AND))
+						ERROR_I(AND,"invalid right factor");
+				   if(IFTREETKIS(tree,OR))
+						ERROR_I(OR,"invalid right factor");	  		
 					delete left;
 					delete tree;
 					return NULL;
@@ -819,36 +970,36 @@ struct REParse{
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
-		//LPR '(' ?
+			//LPR '(' ?
 			tkn.NextToken();
-			if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+			if(NOTTOKEN(LPR)){ ERROR_(LPR); delete tree; return NULL; }
 			//<exp>
 			tkn.NextToken();
 			if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
 			tree->PushChild(leaf);
 			//RPR ')' ? 
-			if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+			if(NOTTOKEN(RPR)){ ERROR_(RPR);  delete tree; return NULL; }
 			//LS '{' ?
 			tkn.NextToken();
-			if(NOTTOKEN(LS)){ delete tree; return NULL; }
+			if(NOTTOKEN(LS)){ ERROR_(LS); delete tree; return NULL; }
 			// [{<statement>}] '}'
 			tkn.NextToken();
 			while(NOTTOKEN(RS)){
 				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 				tree->PushChild(leaf);
 				//IS THE END OR FOUND A INVALID KEY ??
-				if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
+				if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
 			}		
 			/* eif/else/other */
 			tkn.NextToken();
 			/* { eif '{' [ {<statement>} ] '}' } */
 			while (ISTOKEN(EIF)) { 
-				if(NOT(leaf=ParseEIf())){ delete tree; return NULL; }
+				if(NOT(leaf=ParseEIf())){ ERROR_(EIF); delete tree; return NULL; }
 				tree->PushChild(leaf);
 			}
 			/*[ else '{' [ {<statement>} ] '}' ]*/
 			if(NOTTOKEN(ELSE)){ return tree; }
-			if(NOT(leaf=ParseElse())){ delete tree; return NULL; }
+			if(NOT(leaf=ParseElse())){ ERROR_(ELSE); delete tree; return NULL; }
 			tree->PushChild(leaf);
 
 			return tree;
@@ -861,23 +1012,23 @@ struct REParse{
 									     tkn.TokenValue());			
 			//LPR '(' ?
 			tkn.NextToken();
-			if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+			if(NOTTOKEN(LPR)){ ERROR_(LPR);  delete tree; return NULL; }
 			//<exp>
 			tkn.NextToken();
 			if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
 			tree->PushChild(leaf);
 			//RPR ')' ? 
-			if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+			if(NOTTOKEN(RPR)){ ERROR_(RPR); delete tree; return NULL; }
 			//LS '{' ?
 			tkn.NextToken();
-			if(NOTTOKEN(LS)){ delete tree; return NULL; }
+			if(NOTTOKEN(LS)){ ERROR_(LS); delete tree; return NULL; }
 			// [{<statement>}] '}'
 			tkn.NextToken();
 			while(NOTTOKEN(RS)){
 				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 				tree->PushChild(leaf);
 				//IS THE END OR FOUND A INVALID KEY ??
-				if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
+				if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
 			}		
 			/* '}' */
 			tkn.NextToken();
@@ -891,14 +1042,14 @@ struct REParse{
 									     tkn.TokenValue());			
 			//LS '{' ?
 			tkn.NextToken();
-			if(NOTTOKEN(LS)){ delete tree; return NULL; }
+			if(NOTTOKEN(LS)){ ERROR_(LS); delete tree; return NULL; }
 			// [{<statement>}] '}'
 			tkn.NextToken();
 			while(NOTTOKEN(RS)){
 				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 				tree->PushChild(leaf);
 				//IS THE END OR FOUND A INVALID KEY ??
-				if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
+				if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
 			}
 			//'}'
 			tkn.NextToken();
@@ -912,23 +1063,23 @@ struct REParse{
 									 tkn.TokenValue());
 		//LPR '(' ?
 		tkn.NextToken();
-		if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+		if(NOTTOKEN(LPR)){ ERROR_(LPR); delete tree; return NULL; }
 		//<exp>
 		tkn.NextToken();
 		if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
 		tree->PushChild(leaf);
 		//RPR ')' ? 
-		if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+		if(NOTTOKEN(RPR)){ ERROR_(RPR); delete tree; return NULL; }
 		//LS '{' ?
 		tkn.NextToken();
-		if(NOTTOKEN(LS)){ delete tree; return NULL; }
+		if(NOTTOKEN(LS)){ ERROR_(LS); delete tree; return NULL; }
 		// <statement>  | '}'
 		tkn.NextToken();
 		while(NOTTOKEN(RS)){
 			if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 			tree->PushChild(leaf);
 			//IS THE END OR FOUND A INVALID KEY ??
-			if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
 		}		
 		/* '}' */
 		tkn.NextToken();
@@ -941,28 +1092,28 @@ struct REParse{
 									 tkn.TokenValue());
 		//LS '{' ?
 		tkn.NextToken();
-		if(NOTTOKEN(LS)){ delete tree; return NULL; }
+		if(NOTTOKEN(LS)){ ERROR_(LS); delete tree; return NULL; }
 		// <statement>  | '}'
 		tkn.NextToken();
 		while(NOTTOKEN(RS)){
 			if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 			tree->PushChild(leaf);
 			//IS THE END OR FOUND A INVALID KEY ??
-			if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
 		}		
 		/* '}' */
 		tkn.NextToken();
 		/* while */
-		if(NOTTOKEN(WHILE)){ delete tree; return NULL; }	
+		if(NOTTOKEN(WHILE)){ ERROR_(WHILE); delete tree; return NULL; }	
 		//LPR '(' ?
 		tkn.NextToken();
-		if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+		if(NOTTOKEN(LPR)){ ERROR_(LPR); delete tree; return NULL; }
 		//<exp>
 		tkn.NextToken();
 		if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
 		tree->PushChild(leaf);
 		//RPR ')' ? 
-		if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+		if(NOTTOKEN(RPR)){ ERROR_(RPR); delete tree; return NULL; }
 		tkn.NextToken();
 		//return do-tree
 		return tree;
@@ -986,7 +1137,11 @@ struct REParse{
 		//<exp>
 		TreeNode *right=NULL;
 		tkn.NextToken();
-		if(NOT(right=ParseExp())){ delete tree; return NULL; }
+		if(NOT(right=ParseExp())){ 
+			ERROR_I(ASSIGNAMENT,"invalid right expression"); 
+			delete tree; 
+			return NULL; 
+		}
 		//add <exp>
 		tree->PushChild(right);
 		//
@@ -995,21 +1150,34 @@ struct REParse{
 	}
 
 	TreeNode* ParseStatement(){
+
+		TreeNode* tmp=NULL;
+		int lineCode=tkn.GetLine();
+
 		switch (tkn.GetToken())
 		{
 		case Tokenizer::IF:
-			return ParseIf();
+			tmp=ParseIf();
+			if(NOT(tmp)) ERROR_L(IF,"invalid",lineCode);
+			return tmp; 
 		break;
 		case Tokenizer::WHILE:
-			return ParseWhile();
+			tmp=ParseWhile();
+			if(NOT(tmp)) ERROR_L(WHILE,"invalid",lineCode);
+			return tmp; 
 		break;
 		case Tokenizer::DO:
-			return ParseDo();
+			tmp=ParseDo();
+			if(NOT(tmp)) ERROR_L(DO,"invalid",lineCode);
+			return tmp; 
 		break;
 		case Tokenizer::VARIABLE: //assignament
-			return ParseAssignament();
+			tmp=ParseAssignament();
+			if(NOT(tmp)) ERROR_L(VARIABLE,"invalid assignament",lineCode);
+			return tmp; 
 		break;
 		default:
+			 ERROR_L(STATEMENT,"indeterminate statement",lineCode);
 			 return NULL; 
 		break;
 		}
@@ -1032,6 +1200,7 @@ struct REParse{
 
 	TreeNode* StartParse(const std::string & script){
 		this->script=script;
+		this->errors.errors.clear();
 		tkn.SetScript(this->script.c_str());
 		tkn.Start();
 		return ParseStatements();
@@ -1039,6 +1208,12 @@ struct REParse{
 	#undef NOT
 	#undef NOTTOKEN
 	#undef ISTOKEN
+	#undef ISNEXTTOKEN
+	#undef NOTNEXTTOKEN	
+    #undef ERROR_
+	#undef ERROR_I
+	#undef ERROR_L
+	#undef IFTREETKIS
 };
 
 #include <iostream>
@@ -1159,6 +1334,9 @@ int main(){
 	std::cout <<"\ntest REParse:" <<((testTree=testExp.StartParse(scriptexp)) ? "valid" : "invalid" )<< std::endl;
 	if(testTree){
 		std::cout << "\nTree Parse:\n\n" <<testTree->ToString()<< std::endl;
+	}
+	else{
+		std::cout << testExp.errors.ToString();
 	}
 	
 
