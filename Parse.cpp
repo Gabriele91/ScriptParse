@@ -12,14 +12,18 @@
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 00:45
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 11:35
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 16:15
-	@version 0.4.5
+	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 19:58
+	@version 0.4.9
 
 	//recursive descent parser (exp) (WORK!!!!)
 
 	*  <statement> := <statement_if> | 
 					  <statement_while> | 
 					  <statement_do> | 
-					  <statement_assignament>
+					  <statement_assignament> |
+					  <statement_function> |
+					  <statement_call>	
+					  
 
 	*  <statement_if> := if '(' <exp> ')' '{' [{<statement>}]  '}' { <statement_eif> } [ <statement_else> ]
 	*  <statement_eif> := eif '(' <exp> ')' '{' [{<statement>}]  '}'
@@ -27,6 +31,10 @@
 	*  <statement_while> := while '(' <exp> ')' '{' [{<statement>}]  '}'
 	*  <statement_do> := do '{' [{<statement>}] '}'  while '(' <exp> ')'
 	*  <statement_assignament> := <VARIABLE> '=' <exp>
+	*  <statement_function> := 'def' <VARIABLE> ['(' [<ARGS>] ')']'{' [{<statement>}] '}'
+	*  <statement_return>	:= 'return' '(' <exp> ')'
+	*  <call> :=  <VARIABLE> '(' <exp>  { ',' <exp> } ')'
+	*  <ARGS> :=  <VARIABLE> { ',' <VARIABLE> }
 	*
 	************************************************
 	*** EXPRESCION PARSE ***************************
@@ -43,7 +51,12 @@
 	*   term := <factor> { <op_livel2> <factor> }
 	*	op_livel2 : '*' | '/'
 
-	*   factor := [<unitary_op>] <NUMBER> | [<unitary_op>] <VARIABLE> | <STRING> | '(' <exp> ')'
+	*   factor := [<unitary_op>] <NUMBER> |
+	              [<unitary_op>] <VARIABLE> |
+				  <STRING> | 
+				  <statement_call> |
+				  '(' <exp> ')'
+
 	*   unitary_op := '-' | '!'
 
 	struct REParse{
@@ -113,11 +126,13 @@ struct Tokenizer{
 	    VARIABLE,
 		NUMBER, // 12898303...
 		//KEYWORD
-		WHILE,
-		DO,
-		IF,
-		ELSE,
-		EIF,
+		WHILE, //while (){}
+		DO,    //do{}while()
+		IF,	   //if(){}
+		ELSE,  //else{}
+		EIF,    //<if>eif(){}
+		DEF,    //def(<args>){}
+		RETURN, // return(<exp>)
 		//EXP
 	    ADD,    // +
 		MIN,    // -
@@ -137,8 +152,10 @@ struct Tokenizer{
 		RS,     // }
 		//SPECIAL TOKEN
 		ASSIGNAMENT,// =
+		COMMA,		// ,
 		END,        // EOF
-		INVALID     // ???
+		INVALID,     // ???
+		NONE		 // ???
 	};
 
 	/**
@@ -195,6 +212,12 @@ struct Tokenizer{
 			return "do";
 		case Tokenizer::WHILE:
 			return "while";
+			break;		
+		case Tokenizer::DEF:
+			return "def";
+			break;		
+		case Tokenizer::RETURN:
+			return "return";
 			break;		
 		case Tokenizer::VARIABLE:		
 			/* parse variable */
@@ -253,11 +276,17 @@ struct Tokenizer{
 		case Tokenizer::ASSIGNAMENT:
 			return "=";
 			break;
+		case Tokenizer::COMMA:
+			return ",";
+			break;
 		case Tokenizer::END:
 			return "\0";
 			break;
-		case Tokenizer::INVALID:
-			return "";
+		case Tokenizer::INVALID:			
+			return "_INVALID_";
+			break;
+		case Tokenizer::NONE:
+			return "_NONE_";
 			break;
 		default:		
 			return "";
@@ -452,7 +481,19 @@ struct Tokenizer{
 			   (*(pointer+3)=='l') && 
 			   (*(pointer+4)=='e');		
 	}
-
+	bool IsDef(){
+		return (*pointer=='d') && 
+			   (*(pointer+1)=='e') && 
+			   (*(pointer+2)=='f');		
+	}	
+	bool IsReturn(){
+		return (*pointer=='r') && 
+			   (*(pointer+1)=='e') && 
+			   (*(pointer+2)=='t') && 
+			   (*(pointer+3)=='u') && 
+			   (*(pointer+4)=='r') && 
+			   (*(pointer+5)=='n');		
+	}
 	void SkipIf(){
 		pointer+=2;
 	}
@@ -468,7 +509,14 @@ struct Tokenizer{
 	void SkipWhile(){
 		pointer+=5;
 	}
+	void SkipDef(){
+		pointer+=3;
+	}
+	void SkipReturn(){
+		pointer+=6;
+	}
 	
+
 	/* Skeep */
 	void SkipWhiteSpace(){
 		while((*pointer)==' ' || (*pointer)=='\t'||
@@ -492,7 +540,9 @@ struct Tokenizer{
 		if(IsEIf())			type=EIF; else 
 		if(IsElse())		type=ELSE; else 
 		if(IsDo())			type=DO; else 
-		if(IsWhile())		type=WHILE; else 
+		if(IsWhile())		type=WHILE; else
+		if(IsDef())			type=DEF; else
+		if(IsReturn())		type=RETURN; else
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
 		if(IsVariable())    type=VARIABLE; else 
 		if(IsNumber())		type=NUMBER; else 
@@ -517,7 +567,8 @@ struct Tokenizer{
 		if(*pointer == '}') type=RS; else
 
 		/* special key to be searched after exp */			
-		if(*pointer == '=')  type=ASSIGNAMENT; else
+		if(*pointer == '=')  type=ASSIGNAMENT; else	
+		if(*pointer == ',')  type=COMMA; else
 		if(*pointer == '\0') type=END; else
 		type=INVALID;
 	}
@@ -529,6 +580,8 @@ struct Tokenizer{
 		if(type==ELSE)   SkipElse(); else
 		if(type==DO)	 SkipDo(); else
 		if(type==WHILE)  SkipWhile(); else
+		if(type==DEF)    SkipDef(); else
+		if(type==RETURN) SkipReturn(); else
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */		
 		if(type==VARIABLE) SkipVariable(); else
 		if(type==NUMBER) SkipNumber(); else
@@ -552,7 +605,8 @@ struct Tokenizer{
 		if(type==LS) ++pointer; else
 		if(type==RS) ++pointer; else			
 		/* special key to be searched after exp */
-		if(type==ASSIGNAMENT) ++pointer;
+		if(type==ASSIGNAMENT) ++pointer; else
+		if(type==COMMA) ++pointer;
 
 	}
 
@@ -579,6 +633,8 @@ struct ErrorParse{
                 EIF,
                 ELSE,
                 WHILE,
+				DEF,
+				RETURN,
 
                 EQ,
                 GT,
@@ -600,8 +656,10 @@ struct ErrorParse{
 				RS,
 
 				ASSIGNAMENT,
+				COMMA,
 				END,
-				INVALID     
+				INVALID,
+				NONE     
 
 
             };
@@ -652,6 +710,8 @@ const char *ErrorParse::ErrorString[]={
                 "'eif' parse error", //EIF,
                 "'else' parse error", //ELSE,
                 "'while' parse error", //WHILE,
+                "'def' parse error", //DEF,
+                "'return' parse error", //RETURN,
 
                 "'==' parse error",//EQ,
                 "'>' parse error",//GT,
@@ -671,10 +731,12 @@ const char *ErrorParse::ErrorString[]={
 				"')' parse error",//RPR,
 				"'{' parse error",//LS,
 				"'}' parse error",//RS,
-
+				
 				"'=' parse error",//ASSIGNAMENT,
+				"',' parse error",//COMMA,
 				"EOF parse error",//END,
-				"indeterminate parse error",//INVALID    
+				"indeterminate parse error",//INVALID 
+				"token->?NONE?<-token",//NONE    
 };
 /**
 *  Tree struct
@@ -689,7 +751,7 @@ struct TreeNode{
 		
 		TreeNode()
 			:line(0)
-			,token(Tokenizer::Token::INVALID)
+			,token(Tokenizer::Token::NONE)
 			,name(name){}
 		TreeNode(int line,Tokenizer::Token token,const std::string &name)
 			:line(line)
@@ -785,17 +847,26 @@ struct REParse{
 		if(ISTOKEN(NUMBER) ||
 		  (ISTOKEN(STRING) && NOT(newnode)) ||
 		   ISTOKEN(VARIABLE)){
-			TreeNode *node=new TreeNode(tkn.GetLine(),
-										tkn.GetToken(),
-										tkn.TokenValue());			
-			tkn.NextToken();
+
+		   TreeNode *node=NULL;
+		   if(ISTOKEN(VARIABLE) && ISNEXTTOKEN(LPR)) //is a CALL
+			   node=ParseCall();	
+		   else{ //is a value
+			   node=new TreeNode(tkn.GetLine(),
+								 tkn.GetToken(),
+								 tkn.TokenValue());			
+			   tkn.NextToken();
+		   }
 			/* after 
 			   number/variable/string 
 			   can't following another  
 			   number/variable/string */
 			if(	ISTOKEN(NUMBER) ||
 				ISTOKEN(STRING) ||
-			   (ISTOKEN(VARIABLE) && NOTNEXTTOKEN(ASSIGNAMENT))){
+			   (ISTOKEN(VARIABLE) 
+								  && NOTNEXTTOKEN(ASSIGNAMENT) // <exp> <variable> = ...
+								  && NOTNEXTTOKEN(LPR)         // <exp> <variable>(...)
+			   )){
 				delete newnode;
 				delete node;
 				ERROR_I(EXP,"not found operator");
@@ -1149,6 +1220,150 @@ struct REParse{
 		return tree;
 	}
 
+	TreeNode* ParseCall(){
+		//
+		TreeNode *leaf=NULL;
+		//<variable>
+		TreeNode *tree=new TreeNode(tkn.GetLine(),
+									tkn.GetToken(),
+									tkn.TokenValue());
+		//find '('
+		tkn.NextToken();
+		if(ISTOKEN(LPR)){
+			tkn.NextToken();
+			//if is not ')'	
+			while(NOTTOKEN(RPR)){ 
+				// find args...
+				leaf=ParseExp();
+				if(NOT(leaf)){	
+					ERROR_I(EXP,"call function with an invalid argument"); 
+					delete tree; 
+					return NULL;
+				}	
+				//push arg
+				tree->PushChild(leaf);
+				// if not ','
+				if(NOTTOKEN(COMMA)) {
+					break; 
+					tkn.NextToken();
+				}
+				tkn.NextToken();
+			}
+			//find ')'
+			if(NOTTOKEN(RPR)){	
+				ERROR_I(RPR,"call function invalid"); 
+				delete tree; 
+				return NULL;
+			}		
+			tkn.NextToken();
+			return tree;
+		}
+		ERROR_I(EXP,"call function invalid"); 
+		return NULL;
+	}
+
+	TreeNode* ParseDef(){
+		//
+		TreeNode *leaf=NULL; //tmp node
+		//<def>
+		TreeNode *tree=new TreeNode(tkn.GetLine(),
+									tkn.GetToken(),
+									tkn.TokenValue());
+		//find <variable>
+		tkn.NextToken();
+		if(NOTTOKEN(VARIABLE)){	
+			ERROR_I(VARIABLE,"invalid name function"); 
+			delete tree; 
+			return NULL;
+		}
+		/* declaretiron function */
+		TreeNode *headerFunction=new TreeNode();
+		tree->PushChild(headerFunction);
+		/***
+		*				   def
+		*		         /	  \
+		*               /      \
+		*      none(header)     \ 
+		*		 /   \\\        <staments>
+		*       /     \\\
+		*     name    args
+		*/
+		//push name in header
+		headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+											   tkn.GetToken(),
+									           tkn.TokenValue()));
+		//find '('
+		tkn.NextToken();
+		if(ISTOKEN(LPR)){
+			// find args...
+			tkn.NextToken();
+			if(ISTOKEN(VARIABLE)){
+				//push first arg
+				headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+													   tkn.GetToken(),
+													   tkn.TokenValue()));
+				// ','
+				tkn.NextToken();
+				while(ISTOKEN(COMMA)){
+					// <VARIABLE>
+					tkn.NextToken();
+					if(NOTTOKEN(VARIABLE)){	
+						ERROR_I(LPR,"declaration function an invalid argument"); 
+						delete tree; 
+						return NULL;
+					}	
+					// ','
+					tkn.NextToken();
+				}
+			}
+			//find ')'
+			if(NOTTOKEN(RPR)){	
+				ERROR_I(RPR,"declaration function invalid arguments"); 
+				delete tree; 
+				return NULL;
+			}		
+			tkn.NextToken();
+		}
+		//find '{'		
+		if(NOTTOKEN(LS)){	
+			ERROR_(LS); 
+			delete tree; 
+			return NULL;
+		}
+		// <statement>  | '}'
+		tkn.NextToken();
+		while(NOTTOKEN(RS)){
+			if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
+			tree->PushChild(leaf);
+			//IS THE END OR FOUND A INVALID KEY ??
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
+		}		
+		/* '}' */
+		tkn.NextToken();
+		//
+		return tree;
+	}
+	TreeNode* ParseReturn(){
+		//
+		TreeNode *leaf=NULL;
+		//node return
+		TreeNode *tree=new TreeNode(tkn.GetLine(),
+									tkn.GetToken(),
+									tkn.TokenValue());
+		//LPR '(' ?
+		tkn.NextToken();
+		if(NOTTOKEN(LPR)){ ERROR_(LPR);  delete tree; return NULL; }
+		//<exp>
+		tkn.NextToken();
+		if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
+		tree->PushChild(leaf);
+		//RPR ')' ? 
+		if(NOTTOKEN(RPR)){ ERROR_(RPR); delete tree; return NULL; }
+		//
+		tkn.NextToken();
+		return tree;
+	}
+
 	TreeNode* ParseStatement(){
 
 		TreeNode* tmp=NULL;
@@ -1163,18 +1378,35 @@ struct REParse{
 		break;
 		case Tokenizer::WHILE:
 			tmp=ParseWhile();
-			if(NOT(tmp)) ERROR_L(WHILE,"invalid",lineCode);
+			if(NOT(tmp)) ERROR_L(WHILE,"invalid definiction loop",lineCode);
 			return tmp; 
 		break;
 		case Tokenizer::DO:
 			tmp=ParseDo();
-			if(NOT(tmp)) ERROR_L(DO,"invalid",lineCode);
+			if(NOT(tmp)) ERROR_L(DO,"invalid definiction loop",lineCode);
 			return tmp; 
 		break;
-		case Tokenizer::VARIABLE: //assignament
-			tmp=ParseAssignament();
-			if(NOT(tmp)) ERROR_L(VARIABLE,"invalid assignament",lineCode);
+		case Tokenizer::DEF:
+			tmp=ParseDef();
+			if(NOT(tmp)) ERROR_L(DEF,"invalid definiction function",lineCode);
 			return tmp; 
+		break;
+		case Tokenizer::RETURN: 
+			tmp=ParseReturn();
+			if(NOT(tmp)) ERROR_L(RETURN,"invalid return",lineCode);
+			return tmp; 
+		break;
+		case Tokenizer::VARIABLE: //assignament or call
+			if(ISNEXTTOKEN(ASSIGNAMENT)){//assignament 
+				tmp=ParseAssignament();
+				if(NOT(tmp)) ERROR_L(VARIABLE,"invalid assignament",lineCode);
+				return tmp; 
+			}
+			else{//call
+				tmp=ParseCall();
+				if(NOT(tmp)) ERROR_L(VARIABLE,"invalid call function",lineCode);
+				return tmp; 
+			}
 		break;
 		default:
 			 ERROR_L(STATEMENT,"indeterminate statement",lineCode);
