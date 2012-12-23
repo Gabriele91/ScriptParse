@@ -10,7 +10,8 @@
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-22 00:24
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-22 21:48
 	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 00:45
-	@version 0.3
+	@date  ( yyyy-mm-dd, hh:mm ) 2012-12-23 11:35
+	@version 0.4
 
 	//recursive descent parser (exp) (WORK!!!!)
 
@@ -19,11 +20,11 @@
 					  <statement_do> | 
 					  <statement_assignament>
 
-	*  <statement_if> := if '(' <exp> ')' '{' [<statement>]  '}' { <statement_eif> } [ <statement_else> ]
-	*  <statement_eif> := eif '(' <exp> ')' '{' [<statement>]  '}'
-	*  <statement_else> := else '{' [<statement>]  '}'
-	*  <statement_while> := while '(' <exp> ')' '{' [<statement>]  '}'
-	*  <statement_do> := do '{' [<statement>] '}'  while '(' <exp> ')'
+	*  <statement_if> := if '(' <exp> ')' '{' [{<statement>}]  '}' { <statement_eif> } [ <statement_else> ]
+	*  <statement_eif> := eif '(' <exp> ')' '{' [{<statement>}]  '}'
+	*  <statement_else> := else '{' [{<statement>}]  '}'
+	*  <statement_while> := while '(' <exp> ')' '{' [{<statement>}]  '}'
+	*  <statement_do> := do '{' [{<statement>}] '}'  while '(' <exp> ')'
 	*  <statement_assignament> := <VARIABLE> '=' <exp>
 	*
 	************************************************
@@ -153,6 +154,21 @@ struct Tokenizer{
 	}
 	Token GetToken(){
 		return type;
+	}	
+	Token GetNextToken(){
+		//save current state
+		const char *tpointer=pointer;
+		Token ttype=type;
+		//get next token
+		SkipToken();
+		DeterminateToken();
+		//save token
+		Token rtoken=type;
+		//resume state		
+		pointer=tpointer;
+		type=ttype;
+		//return next state
+		return rtoken;
 	}
 	int GetLine(){
 		return countline;
@@ -626,25 +642,27 @@ struct TreeNode{
 struct REParse{
 
 	
-	#define NOT(X) !(X)
+	#define NOT(X) (!(X))
 	#define NOTTOKEN(X) (tkn.GetToken()!=Tokenizer::X)
 	#define ISTOKEN(X) (tkn.GetToken()==Tokenizer::X)
+	#define NOTNEXTTOKEN(X) (tkn.GetNextToken()!=Tokenizer::X)
+	#define ISNEXTTOKEN(X) (tkn.GetNextToken()==Tokenizer::X)
 	std::string script;
 	Tokenizer tkn;
 	
 	TreeNode* ParserFactor(){
 		/* unary op, '-' | '!' */
 		TreeNode *newnode=NULL;
-		if(tkn.GetToken()==Tokenizer::MIN ||  tkn.GetToken()==Tokenizer::NOT){
+		if(ISTOKEN(MIN) || tkn.GetToken()==Tokenizer::NOT){
 			newnode=new TreeNode(tkn.GetLine(),
 							     tkn.GetToken(),
 							     tkn.TokenValue());	
 			tkn.NextToken();	
 		}
 
-		if(tkn.GetToken()==Tokenizer::NUMBER ||
-		  (tkn.GetToken()==Tokenizer::STRING && NOT(newnode)) ||
-		   tkn.GetToken()==Tokenizer::VARIABLE ){
+		if(ISTOKEN(NUMBER) ||
+		  (ISTOKEN(STRING) && NOT(newnode)) ||
+		   ISTOKEN(VARIABLE)){
 			TreeNode *node=new TreeNode(tkn.GetLine(),
 										tkn.GetToken(),
 										tkn.TokenValue());			
@@ -653,9 +671,9 @@ struct REParse{
 			   number/variable/string 
 			   can't following another  
 			   number/variable/string */
-			if(	tkn.GetToken()==Tokenizer::NUMBER ||
-				tkn.GetToken()==Tokenizer::STRING ||
-				tkn.GetToken()==Tokenizer::VARIABLE ){
+			if(	ISTOKEN(NUMBER) ||
+				ISTOKEN(STRING) ||
+			   (ISTOKEN(VARIABLE) && NOTNEXTTOKEN(ASSIGNAMENT))){
 				delete newnode;
 				delete node;
 				return NULL;
@@ -668,10 +686,10 @@ struct REParse{
 			return newnode;
 		}
 
-		if(NOT(newnode) && tkn.GetToken()==Tokenizer::LPR){ // '('
+		if(NOT(newnode) && ISTOKEN(LPR)){ // '('
 			tkn.NextToken();
 			TreeNode *node=ParseExp();
-			if(tkn.GetToken()==Tokenizer::RPR){// ')'
+			if(ISTOKEN(RPR)){// ')'
 				tkn.NextToken();
 				return node; 
 			}
@@ -687,8 +705,8 @@ struct REParse{
 		TreeNode *right=NULL;
 		/* nodes */
 		if(NOT(left=ParserFactor())) return NULL; //<Factor>
-		while(tkn.GetToken()==Tokenizer::MUL||
-			  tkn.GetToken()==Tokenizer::DIV){ //'*' | '/'
+		while(ISTOKEN(MUL)||
+			  ISTOKEN(DIV)){ //'*' | '/'
 			  //before tree				  
 			  if(tree) left=tree;  
 			  /* set tree */
@@ -715,8 +733,8 @@ struct REParse{
 		TreeNode *right=NULL;
 		/* nodes */	
 		if(NOT(left=ParseTerm())) return NULL; //<term>
-		while(tkn.GetToken()==Tokenizer::ADD||
-			  tkn.GetToken()==Tokenizer::MIN){ //'+' | '-' 
+		while(ISTOKEN(ADD)||
+			  ISTOKEN(MIN)){ //'+' | '-' 
 				//before tree				  
 				if(tree) left=tree;
 				/* make tree */
@@ -743,11 +761,11 @@ struct REParse{
 		TreeNode *right=NULL;
 		/* nodes */	
 		if(NOT(left=ParseBase())) return NULL; //<base>
-		while(tkn.GetToken()==Tokenizer::EQ ||
-			  tkn.GetToken()==Tokenizer::GT ||
-			  tkn.GetToken()==Tokenizer::LT ||
-			  tkn.GetToken()==Tokenizer::GTE||
-			  tkn.GetToken()==Tokenizer::LTE){ //'==' | '>' | '<' | '>=' | '<=' 
+		while(ISTOKEN(EQ) ||
+			  ISTOKEN(GT) ||
+			  ISTOKEN(LT) ||
+			  ISTOKEN(GTE)||
+			  ISTOKEN(LTE)){ //'==' | '>' | '<' | '>=' | '<=' 
 				//before tree				  
 				if(tree) left=tree;
 				/* make tree */
@@ -774,8 +792,8 @@ struct REParse{
 		TreeNode *right=NULL;
 		/* nodes */	
 		if(NOT(left=ParseCompare())) return NULL; //<compare>
-		while(tkn.GetToken()==Tokenizer::AND||
-			  tkn.GetToken()==Tokenizer::OR){ //'&&' | '||' 
+		while(ISTOKEN(AND)||
+			  ISTOKEN(OR)){ //'&&' | '||' 
 				//before tree				  
 				if(tree) left=tree;
 				/* make tree */
@@ -813,22 +831,22 @@ struct REParse{
 			//LS '{' ?
 			tkn.NextToken();
 			if(NOTTOKEN(LS)){ delete tree; return NULL; }
-			// <statement>  | '}'
+			// [{<statement>}] '}'
 			tkn.NextToken();
-			if(NOTTOKEN(RS)){ 
+			while(NOTTOKEN(RS)){
 				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 				tree->PushChild(leaf);
-				//RS '}' ?
-				if(NOTTOKEN(RS)){ delete tree; return NULL; }	 
+				//IS THE END OR FOUND A INVALID KEY ??
+				if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
 			}		
 			/* eif/else/other */
 			tkn.NextToken();
-			/* { eif '{' [ <statement> ] '}' } */
+			/* { eif '{' [ {<statement>} ] '}' } */
 			while (ISTOKEN(EIF)) { 
 				if(NOT(leaf=ParseEIf())){ delete tree; return NULL; }
 				tree->PushChild(leaf);
 			}
-			/*[ else '{' [ <statement> ] '}' ]*/
+			/*[ else '{' [ {<statement>} ] '}' ]*/
 			if(NOTTOKEN(ELSE)){ return tree; }
 			if(NOT(leaf=ParseElse())){ delete tree; return NULL; }
 			tree->PushChild(leaf);
@@ -853,13 +871,13 @@ struct REParse{
 			//LS '{' ?
 			tkn.NextToken();
 			if(NOTTOKEN(LS)){ delete tree; return NULL; }
-			// <statement>  | '}'
+			// [{<statement>}] '}'
 			tkn.NextToken();
-			if(NOTTOKEN(RS)){ 
+			while(NOTTOKEN(RS)){
 				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 				tree->PushChild(leaf);
-				//RS '}' ?
-				if(NOTTOKEN(RS)){ delete tree; return NULL; }	 
+				//IS THE END OR FOUND A INVALID KEY ??
+				if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
 			}		
 			/* '}' */
 			tkn.NextToken();
@@ -874,17 +892,80 @@ struct REParse{
 			//LS '{' ?
 			tkn.NextToken();
 			if(NOTTOKEN(LS)){ delete tree; return NULL; }
-			// <statement>  | '}'
+			// [{<statement>}] '}'
 			tkn.NextToken();
-			if(NOTTOKEN(RS)){ 
+			while(NOTTOKEN(RS)){
 				if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
 				tree->PushChild(leaf);
-				//RS '}' ?
-				if(NOTTOKEN(RS)){ delete tree; return NULL; }	 
+				//IS THE END OR FOUND A INVALID KEY ??
+				if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
 			}
-			//end 'else' '{' .. '}'
+			//'}'
 			tkn.NextToken();
 			return tree;
+	}
+
+	TreeNode* ParseWhile(){
+		TreeNode *leaf=NULL;
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		//LPR '(' ?
+		tkn.NextToken();
+		if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+		//<exp>
+		tkn.NextToken();
+		if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
+		tree->PushChild(leaf);
+		//RPR ')' ? 
+		if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+		//LS '{' ?
+		tkn.NextToken();
+		if(NOTTOKEN(LS)){ delete tree; return NULL; }
+		// <statement>  | '}'
+		tkn.NextToken();
+		while(NOTTOKEN(RS)){
+			if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
+			tree->PushChild(leaf);
+			//IS THE END OR FOUND A INVALID KEY ??
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
+		}		
+		/* '}' */
+		tkn.NextToken();
+		return tree; 
+	}
+	TreeNode* ParseDo(){
+		TreeNode *leaf=NULL;
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		//LS '{' ?
+		tkn.NextToken();
+		if(NOTTOKEN(LS)){ delete tree; return NULL; }
+		// <statement>  | '}'
+		tkn.NextToken();
+		while(NOTTOKEN(RS)){
+			if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
+			tree->PushChild(leaf);
+			//IS THE END OR FOUND A INVALID KEY ??
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ delete tree; return NULL; }	 
+		}		
+		/* '}' */
+		tkn.NextToken();
+		/* while */
+		if(NOTTOKEN(WHILE)){ delete tree; return NULL; }	
+		//LPR '(' ?
+		tkn.NextToken();
+		if(NOTTOKEN(LPR)){ delete tree; return NULL; }
+		//<exp>
+		tkn.NextToken();
+		if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
+		tree->PushChild(leaf);
+		//RPR ')' ? 
+		if(NOTTOKEN(RPR)){ delete tree; return NULL; }
+		tkn.NextToken();
+		//return do-tree
+		return tree;
 	}
 
 	TreeNode* ParseAssignament(){	
@@ -912,11 +993,18 @@ struct REParse{
 
 		return tree;
 	}
+
 	TreeNode* ParseStatement(){
 		switch (tkn.GetToken())
 		{
 		case Tokenizer::IF:
 			return ParseIf();
+		break;
+		case Tokenizer::WHILE:
+			return ParseWhile();
+		break;
+		case Tokenizer::DO:
+			return ParseDo();
 		break;
 		case Tokenizer::VARIABLE: //assignament
 			return ParseAssignament();
@@ -926,12 +1014,27 @@ struct REParse{
 		break;
 		}
 	}
+	TreeNode* ParseStatements(){	
+		TreeNode* leaf=NULL;
+		TreeNode* root=new TreeNode();
+
+		while (NOTTOKEN(END)&&NOTTOKEN(INVALID))
+		{	
+			leaf=ParseStatement();
+			if(NOT(leaf)) { delete root; return NULL; }
+			root->PushChild(leaf);
+		}
+
+		return root;
+	}
+
+
 
 	TreeNode* StartParse(const std::string & script){
 		this->script=script;
 		tkn.SetScript(this->script.c_str());
 		tkn.Start();
-		return ParseStatement();
+		return ParseStatements();
 	}
 	#undef NOT
 	#undef NOTTOKEN
@@ -940,6 +1043,8 @@ struct REParse{
 
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <sstream>
 
 std::string GetStringToken(Tokenizer::Token token){
 
@@ -1034,12 +1139,10 @@ std::string GetStringToken(Tokenizer::Token token){
 }
 
 int main(){
+	std::ifstream t("test.pl");
+	std::string scriptexp((std::istreambuf_iterator<char>(t)),
+						   std::istreambuf_iterator<char>());
 
-	std::string scriptexp("if ( -2*-A > 5+1 ) { }"
-						  "eif (0){ a=c+d } "
-						  "else {"
-						  "if( 3+2 ) {}"
-						  "} ");
 	std::cout << scriptexp << "\n\ntest Tokenizer:\n\n";
 	/* test Tokenizer */
 	Tokenizer tkn;
