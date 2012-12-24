@@ -2,8 +2,12 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include "Parse/LexerTree.h"
+#include "Parse/Parse.h"
 
+//#define TEST_VM
+#define TEST_PARSE
+
+#ifdef TEST_PARSE
 std::string GetStringToken(Tokenizer::Token token){
 
 	switch (token)
@@ -11,8 +15,8 @@ std::string GetStringToken(Tokenizer::Token token){
 	case Tokenizer::IF:
 		return "IF";
 		break;
-	case Tokenizer::EIF:
-		return "EIF";
+	case Tokenizer::ELIF:
+		return "ELIF";
 		break;
 	case Tokenizer::ELSE:
 		return "ELSE";
@@ -22,6 +26,12 @@ std::string GetStringToken(Tokenizer::Token token){
 		break;
 	case Tokenizer::WHILE:
 		return "WHILE";
+		break;
+	case Tokenizer::DEF:
+		return "DEF";
+		break;
+	case Tokenizer::RETURN:
+		return "RETURN";
 		break;
 	case Tokenizer::VARIABLE:
 		return "VARIABLE";
@@ -89,6 +99,9 @@ std::string GetStringToken(Tokenizer::Token token){
 	case Tokenizer::INVALID:
 		return "INVALID";
 		break;
+	case Tokenizer::NONE:
+		return "NONE";
+		break;
 	default:		
 		return "???????";
 		break;
@@ -110,23 +123,24 @@ int main(){
 		std::cout << GetStringToken(tkn.GetToken()) << std::endl;
 		tkn.NextToken();
 	}
-	/* test REParse  */
+	/* test LexerTree  */
 
-	REParse testExp;
-	TreeNode* testTree;
-	std::cout <<"\ntest REParse:" <<((testTree=testExp.StartParse(scriptexp)) ? "valid" : "invalid" )<< std::endl;
-	if(testTree){
-		std::cout << "\nTree Parse:\n\n" <<testTree->ToString()<< std::endl;
-	}
+	Parse parse;
+	TreeNode* tree=parse.StartParse(scriptexp);
+
+	std::cout <<"\nParse:" <<(!parse.FindErrors() ? "valid" : "invalid" )<< std::endl;
+	
+	if(!parse.FindErrors())
+		std::cout << "\nTree Parse:\n\n" <<tree->ToString()<< std::endl;
 	else{
-		std::cout << testExp.errors.ToString();
+		std::cout << parse.ErrorsToString();
 	}
 	
-
+	system("pause");
 	return 0;
 
 }
-
+#endif
 
 /* TEST VM */
 

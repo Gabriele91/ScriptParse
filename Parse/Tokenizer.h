@@ -15,9 +15,11 @@ struct Tokenizer{
 		DO,    //do{}while()
 		IF,	   //if(){}
 		ELSE,  //else{}
-		EIF,    //<if>eif(){}
+		ELIF,    //<if>elif(){}
 		DEF,    //def(<args>){}
 		RETURN, // return(<exp>)
+		BREAK,    //break
+		CONTINUE, //continue
 		//EXP
 	    ADD,    // +
 		MIN,    // -
@@ -85,19 +87,23 @@ struct Tokenizer{
 
 	/* key words */
 	bool IsIf();
-	bool IsEIf();
+	bool IsElif();
 	bool IsElse();
 	bool IsDo();
 	bool IsWhile();
 	bool IsDef();
 	bool IsReturn();
+	bool IsBreak();
+	bool IsContinue();
 	void SkipIf();
-	void SkipEIf();
+	void SkipElif();
 	void SkipElse();
 	void SkipDo();
 	void SkipWhile();
 	void SkipDef();
-	void SkipReturn();
+	void SkipReturn();;
+	void SkipBreak();
+	void SkipContinue();
 	
 
 	/* Skeep */

@@ -41,8 +41,8 @@
 		case Tokenizer::IF:
 			return "if";
 			break;
-		case Tokenizer::EIF:
-			return "eif";
+		case Tokenizer::ELIF:
+			return "elif";
 			break;
 		case Tokenizer::ELSE:
 			return "else";
@@ -57,6 +57,12 @@
 			break;		
 		case Tokenizer::RETURN:
 			return "return";
+			break;		
+		case Tokenizer::BREAK:
+			return "break";
+			break;		
+		case Tokenizer::CONTINUE:
+			return "continue";
 			break;		
 		case Tokenizer::VARIABLE:		
 			/* parse variable */
@@ -281,7 +287,7 @@
 	}
 	
 	bool Tokenizer::IsEQ(){
-		return (*pointer=='<') && (*(pointer+1)=='=');
+		return (*pointer=='=') && (*(pointer+1)=='=');
 	}
 	bool Tokenizer::IsGTE(){
 		return (*pointer=='>') && (*(pointer+1)=='=');
@@ -297,10 +303,11 @@
 	bool Tokenizer::IsIf(){
 		return (*pointer=='i') && (*(pointer+1)=='f');		
 	}	
-	bool Tokenizer::IsEIf(){
+	bool Tokenizer::IsElif(){
 		return (*pointer=='e') && 
-			   (*(pointer+1)=='i') && 
-			   (*(pointer+2)=='f');		
+			   (*(pointer+1)=='l') && 
+			   (*(pointer+2)=='i') && 
+			   (*(pointer+3)=='f');		
 	}	
 	bool Tokenizer::IsElse(){
 		return (*pointer=='e') && 
@@ -330,12 +337,29 @@
 			   (*(pointer+3)=='u') && 
 			   (*(pointer+4)=='r') && 
 			   (*(pointer+5)=='n');		
-	}
+	}	
+	bool Tokenizer::IsBreak(){
+		return (*pointer=='b') && 
+			   (*(pointer+1)=='r') && 
+			   (*(pointer+2)=='e') && 
+			   (*(pointer+3)=='a') && 
+			   (*(pointer+4)=='k');		
+	}	
+	bool Tokenizer::IsContinue(){
+		return (*pointer=='c') && 
+			   (*(pointer+1)=='o') && 
+			   (*(pointer+2)=='n') && 
+			   (*(pointer+3)=='t') && 
+			   (*(pointer+4)=='i') && 
+			   (*(pointer+5)=='n') && 
+			   (*(pointer+6)=='u') && 
+			   (*(pointer+7)=='e');		
+	}	
 	void Tokenizer::SkipIf(){
 		pointer+=2;
 	}
-	void Tokenizer::SkipEIf(){
-		pointer+=3;
+	void Tokenizer::SkipElif(){
+		pointer+=4;
 	}
 	void Tokenizer::SkipElse(){
 		pointer+=4;
@@ -351,6 +375,12 @@
 	}
 	void Tokenizer::SkipReturn(){
 		pointer+=6;
+	}
+	void Tokenizer::SkipBreak(){
+		pointer+=5;
+	}
+	void Tokenizer::SkipContinue(){
+		pointer+=8;
 	}
 	
 
@@ -374,12 +404,14 @@
 		SkipWhiteSpace();
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
 		if(IsIf())			type=IF; else 
-		if(IsEIf())			type=EIF; else 
+		if(IsElif())			type=ELIF; else 
 		if(IsElse())		type=ELSE; else 
 		if(IsDo())			type=DO; else 
 		if(IsWhile())		type=WHILE; else
 		if(IsDef())			type=DEF; else
 		if(IsReturn())		type=RETURN; else
+		if(IsBreak())		type=BREAK; else
+		if(IsContinue())	type=CONTINUE; else
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
 		if(IsVariable())    type=VARIABLE; else 
 		if(IsNumber())		type=NUMBER; else 
@@ -413,12 +445,14 @@
 		SkipWhiteSpace();
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
 		if(type==IF)	 SkipIf(); else
-		if(type==EIF)	 SkipEIf(); else
+		if(type==ELIF)	 SkipElif(); else
 		if(type==ELSE)   SkipElse(); else
 		if(type==DO)	 SkipDo(); else
 		if(type==WHILE)  SkipWhile(); else
 		if(type==DEF)    SkipDef(); else
-		if(type==RETURN) SkipReturn(); else
+		if(type==RETURN)   SkipReturn(); else
+		if(type==BREAK)    SkipBreak(); else
+		if(type==CONTINUE) SkipContinue(); else
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */		
 		if(type==VARIABLE) SkipVariable(); else
 		if(type==NUMBER) SkipNumber(); else

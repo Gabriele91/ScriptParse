@@ -4,11 +4,14 @@
 TreeNode::TreeNode()
 			:line(0)
 			,token(Tokenizer::Token::NONE)
-			,name(name){}
-TreeNode::TreeNode(int line,Tokenizer::Token token,const std::string &name)
+			,name(name)
+			,parent(0){}
+TreeNode::TreeNode(int line,Tokenizer::Token token,const std::string &name,AdditionalInfo info)
 			:line(line)
 			,token(token)
-			,name(name){
+			,name(name)
+			,info(info)
+			,parent(0){
 		}
 TreeNode::~TreeNode(){
 		for(int i=0;i<Size();++i) 
@@ -16,6 +19,7 @@ TreeNode::~TreeNode(){
 }
 
 TreeNode* TreeNode::PushChild(TreeNode* in){
+			in->parent=this;
 			childs.push_back(in);
 			return in;
 		}

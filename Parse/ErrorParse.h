@@ -1,5 +1,5 @@
 #ifndef ERROR_PERSE_H
-#define ERROR_PARSE_H
+#define ERROR_PERSE_H
 
 #include "UtilityString.h"
 #include <vector>
@@ -15,17 +15,20 @@ struct ErrorParse{
 				STATEMENT,
 				//
                 PARSE,
+				SYNTAX,
                 VARIABLE,
                 NUMBER,
                 STRING,
 
                 DO,
                 IF,
-                EIF,
+                ELIF,
                 ELSE,
                 WHILE,
 				DEF,
 				RETURN,
+				BREAK,
+				CONTINUE,
 
                 EQ,
                 GT,
@@ -57,7 +60,7 @@ struct ErrorParse{
 	struct Error{ 
 				unsigned int line; 
 				unsigned char error;
-				const char    *addictioninfo;
+				std::string   addictioninfo;
 			};
 	
 	std::vector<Error> errors;
@@ -65,7 +68,7 @@ struct ErrorParse{
 
 	void PushError(unsigned int line, 
 				   unsigned char errorType, 
-				   const char *addictioninfo);
+				   const std::string& addictioninfo);
 
 	std::string ToString();
 

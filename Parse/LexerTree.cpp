@@ -10,7 +10,7 @@
 	#define ERROR_L(X,I,L) errors.PushError(L,ErrorParse::X,I)
 	#define IFTREETKIS(X,Y) X->token==Tokenizer::Y
 
-	TreeNode* REParse::ParserFactor(){
+	TreeNode* LexerTree::ParserFactor(){
 
 		if(ISTOKEN(DEF)){ //is a LESSNAME FUNCTION
 			   TreeNode *node=NULL;
@@ -88,7 +88,7 @@
 				 
 		return NULL;
 	}
-	TreeNode* REParse::ParseTerm(){
+	TreeNode* LexerTree::ParseTerm(){
 		/* nodes */
 		TreeNode *left=NULL;
 		TreeNode *tree=NULL;
@@ -120,7 +120,7 @@
 		}
 		return tree ? tree : left;
 	}
-	TreeNode* REParse::ParseBase(){	
+	TreeNode* LexerTree::ParseBase(){	
 		/* nodes */
 		TreeNode *left=NULL;
 		TreeNode *tree=NULL;
@@ -152,7 +152,7 @@
 		}
 		return tree ? tree : left;
 	}
-	TreeNode* REParse::ParseCompare(){	
+	TreeNode* LexerTree::ParseCompare(){	
 		/* nodes */
 		TreeNode *left=NULL;
 		TreeNode *tree=NULL;
@@ -193,7 +193,7 @@
 		}
 		return tree ? tree : left;
 	}
-	TreeNode* REParse::ParseExp(){
+	TreeNode* LexerTree::ParseExp(){
 		/* nodes */
 		TreeNode *left=NULL;
 		TreeNode *tree=NULL;
@@ -226,7 +226,7 @@
 		return tree ? tree : left;
 	}
 
-	TreeNode* REParse::ParseIf(){	
+	TreeNode* LexerTree::ParseIf(){	
 		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
 									 tkn.GetToken(),
@@ -251,11 +251,11 @@
 				//IS THE END OR FOUND A INVALID KEY ??
 				if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
 			}		
-			/* eif/else/other */
+			/* elif/else/other */
 			tkn.NextToken();
-			/* { eif '{' [ {<statement>} ] '}' } */
-			while (ISTOKEN(EIF)) { 
-				if(NOT(leaf=ParseEIf())){ ERROR_(EIF); delete tree; return NULL; }
+			/* { elif '{' [ {<statement>} ] '}' } */
+			while (ISTOKEN(ELIF)) { 
+				if(NOT(leaf=ParseElif())){ ERROR_(ELIF); delete tree; return NULL; }
 				tree->PushChild(leaf);
 			}
 			/*[ else '{' [ {<statement>} ] '}' ]*/
@@ -265,7 +265,7 @@
 
 			return tree;
 	}
-	TreeNode* REParse::ParseEIf(){
+	TreeNode* LexerTree::ParseElif(){
 			/* make else tree */
 			TreeNode *leaf=NULL;
 			TreeNode *tree= new TreeNode(tkn.GetLine(),
@@ -295,7 +295,7 @@
 			tkn.NextToken();
 			return tree;
 	}
-	TreeNode* REParse::ParseElse(){
+	TreeNode* LexerTree::ParseElse(){
 			/* make else tree */
 			TreeNode *leaf=NULL;
 			TreeNode *tree= new TreeNode(tkn.GetLine(),
@@ -317,7 +317,7 @@
 			return tree;
 	}
 
-	TreeNode* REParse::ParseWhile(){
+	TreeNode* LexerTree::ParseWhile(){
 		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
 									 tkn.GetToken(),
@@ -346,7 +346,7 @@
 		tkn.NextToken();
 		return tree; 
 	}
-	TreeNode* REParse::ParseDo(){
+	TreeNode* LexerTree::ParseDo(){
 		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
 									 tkn.GetToken(),
@@ -379,8 +379,24 @@
 		//return do-tree
 		return tree;
 	}
+	TreeNode* LexerTree::ParseBreak(){
+		TreeNode *leaf=NULL;
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		tkn.NextToken();
+		return tree;
+	}
+	TreeNode* LexerTree::ParseContinue(){	
+		TreeNode *leaf=NULL;
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		tkn.NextToken();
+		return tree;
+	}
 
-	TreeNode* REParse::ParseAssignament(){	
+	TreeNode* LexerTree::ParseAssignament(){	
 		//<variable>
 		TreeNode *left=new TreeNode(tkn.GetLine(),
 									tkn.GetToken(),
@@ -410,99 +426,7 @@
 		return tree;
 	}
 	
-	TreeNode* REParse::ParseCall(){
-		//
-		TreeNode *leaf=NULL;
-		//<variable>
-		TreeNode *tree=new TreeNode(tkn.GetLine(),
-									tkn.GetToken(),
-									tkn.TokenValue());
-		//find '('
-		tkn.NextToken();
-		if(ISTOKEN(LPR)){
-			tkn.NextToken();
-			//if is not ')'	
-			while(NOTTOKEN(RPR)){ 
-				// find args...
-				leaf=ParseExp();
-				if(NOT(leaf)){	
-					ERROR_I(EXP,"call function with an invalid argument"); 
-					delete tree; 
-					return NULL;
-				}	
-				//push arg
-				tree->PushChild(leaf);
-				// if not ','
-				if(NOTTOKEN(COMMA)) {
-					break; 
-					tkn.NextToken();
-				}
-				tkn.NextToken();
-			}
-			//find ')'
-			if(NOTTOKEN(RPR)){	
-				ERROR_I(RPR,"call function invalid"); 
-				delete tree; 
-				return NULL;
-			}		
-			tkn.NextToken();
-			return tree;
-		}
-		ERROR_I(EXP,"call function invalid"); 
-		return NULL;
-	}
-	TreeNode* REParse::ParseLessNameCall(TreeNode *lessNameFunction){
-		//
-		TreeNode *leaf=NULL;
-		//<NONE>
-		TreeNode *tree=new TreeNode(tkn.GetLine(),
-									Tokenizer::NONE,
-									tkn.TokenValue());
-		/**
-		********************
-		LESS NAME CALL TREE:
-		********************
-		*	     <NONE>
-		*		 /  \\\      
-		*       /	 \\\
-		*    <def>   <exp>
-		*
-		*/
-		tree->PushChild(lessNameFunction);
-		//find '('
-		if(ISTOKEN(LPR)){
-			tkn.NextToken();
-			//if is not ')'	
-			while(NOTTOKEN(RPR)){ 
-				// find args...
-				leaf=ParseExp();
-				if(NOT(leaf)){	
-					ERROR_I(EXP,"call less name function with an invalid argument"); 
-					delete tree; 
-					return NULL;
-				}	
-				//push arg
-				tree->PushChild(leaf);
-				// if not ','
-				if(NOTTOKEN(COMMA)) {
-					break; 
-					tkn.NextToken();
-				}
-				tkn.NextToken();
-			}
-			//find ')'
-			if(NOTTOKEN(RPR)){	
-				ERROR_I(RPR,"call less name function invalid"); 
-				delete tree; 
-				return NULL;
-			}		
-			tkn.NextToken();
-			return tree;
-		}
-		ERROR_I(EXP,"call less name function invalid"); 
-		return NULL;
-	}
-	
+
 	/***
 	*				   def
 	*		         /	  \
@@ -512,7 +436,7 @@
 	*       /     \\\
 	*     name    args
 	*/
-	TreeNode* REParse::ParseDef(){
+	TreeNode* LexerTree::ParseDef(){
 		//
 		TreeNode *leaf=NULL; //tmp node
 		//<def>
@@ -528,6 +452,7 @@
 		}
 		/* declaretiron function */
 		TreeNode *headerFunction=new TreeNode();
+		headerFunction->info=TreeNode::IS_HEADER;
 		tree->PushChild(headerFunction);
 		//push name in header
 		headerFunction->PushChild(new TreeNode(tkn.GetLine(),
@@ -584,7 +509,50 @@
 		//
 		return tree;
 	}
-	TreeNode* REParse::ParseLessNameDef(){
+	TreeNode* LexerTree::ParseCall(){
+		//
+		TreeNode *leaf=NULL;
+		//<variable>
+		TreeNode *tree=new TreeNode(tkn.GetLine(),
+									tkn.GetToken(),
+									tkn.TokenValue(),
+									TreeNode::IS_CALL);
+		//find '('
+		tkn.NextToken();
+		if(ISTOKEN(LPR)){
+			tkn.NextToken();
+			//if is not ')'	
+			while(NOTTOKEN(RPR)){ 
+				// find args...
+				leaf=ParseExp();
+				if(NOT(leaf)){	
+					ERROR_I(EXP,"call function with an invalid argument"); 
+					delete tree; 
+					return NULL;
+				}	
+				//push arg
+				tree->PushChild(leaf);
+				// if not ','
+				if(NOTTOKEN(COMMA)) {
+					break; 
+					tkn.NextToken();
+				}
+				tkn.NextToken();
+			}
+			//find ')'
+			if(NOTTOKEN(RPR)){	
+				ERROR_I(RPR,"call function invalid"); 
+				delete tree; 
+				return NULL;
+			}		
+			tkn.NextToken();
+			return tree;
+		}
+		ERROR_I(EXP,"call function invalid"); 
+		return NULL;
+	}	
+
+	TreeNode* LexerTree::ParseLessNameDef(){
 		//
 		TreeNode *leaf=NULL; //tmp node
 		//<def>
@@ -596,7 +564,9 @@
 		tkn.NextToken();
 		/* declaretiron function */
 		TreeNode *headerFunction=new TreeNode();
+		headerFunction->info=TreeNode::IS_LESSNAME_HEADER;
 		tree->PushChild(headerFunction);
+		//
 		headerFunction->PushChild(new TreeNode(tkn.GetLine(),
 											   Tokenizer::NONE,
 											   "")); //name --> none 
@@ -651,7 +621,60 @@
 		//
 		return tree;
 	}
-	TreeNode* REParse::ParseReturn(){
+	TreeNode* LexerTree::ParseLessNameCall(TreeNode *lessNameFunction){
+		//
+		TreeNode *leaf=NULL;
+		//<NONE>
+		TreeNode *tree=new TreeNode(tkn.GetLine(),
+									Tokenizer::NONE,
+									tkn.TokenValue(),
+									TreeNode::IS_LESSNAME_CALL);
+		/**
+		********************
+		LESS NAME CALL TREE:
+		********************
+		*	     <NONE>
+		*		 /  \\\      
+		*       /	 \\\
+		*    <def>   <exp>
+		*
+		*/
+		tree->PushChild(lessNameFunction);
+		//find '('
+		if(ISTOKEN(LPR)){
+			tkn.NextToken();
+			//if is not ')'	
+			while(NOTTOKEN(RPR)){ 
+				// find args...
+				leaf=ParseExp();
+				if(NOT(leaf)){	
+					ERROR_I(EXP,"call less name function with an invalid argument"); 
+					delete tree; 
+					return NULL;
+				}	
+				//push arg
+				tree->PushChild(leaf);
+				// if not ','
+				if(NOTTOKEN(COMMA)) {
+					break; 
+					tkn.NextToken();
+				}
+				tkn.NextToken();
+			}
+			//find ')'
+			if(NOTTOKEN(RPR)){	
+				ERROR_I(RPR,"call less name function invalid"); 
+				delete tree; 
+				return NULL;
+			}		
+			tkn.NextToken();
+			return tree;
+		}
+		ERROR_I(EXP,"call less name function invalid"); 
+		return NULL;
+	}
+
+	TreeNode* LexerTree::ParseReturn(){
 		//
 		TreeNode *leaf=NULL;
 		//node return
@@ -672,7 +695,7 @@
 		return tree;
 	}
 
-	TreeNode* REParse::ParseStatement(){
+	TreeNode* LexerTree::ParseStatement(){
 
 		TreeNode* tmp=NULL;
 		int lineCode=tkn.GetLine();
@@ -704,6 +727,16 @@
 			if(NOT(tmp)) ERROR_L(RETURN,"invalid return",lineCode);
 			return tmp; 
 		break;
+		case Tokenizer::BREAK: 
+			tmp=ParseBreak();
+			if(NOT(tmp)) ERROR_L(RETURN,"invalid break",lineCode);
+			return tmp; 
+		break;
+		case Tokenizer::CONTINUE: 
+			tmp=ParseContinue();
+			if(NOT(tmp)) ERROR_L(RETURN,"invalid continue",lineCode);
+			return tmp; 
+		break;
 		case Tokenizer::VARIABLE: //assignament or call
 			if(ISNEXTTOKEN(ASSIGNAMENT)){//assignament 
 				tmp=ParseAssignament();
@@ -722,7 +755,7 @@
 		break;
 		}
 	}
-	TreeNode* REParse::ParseStatements(){	
+	TreeNode* LexerTree::ParseStatements(){	
 		TreeNode* leaf=NULL;
 		TreeNode* root=new TreeNode();
 
@@ -736,7 +769,7 @@
 		return root;
 	}
 
-	TreeNode* REParse::StartParse(const std::string & script){
+	TreeNode* LexerTree::StartParse(const std::string & script){
 		this->script=script;
 		this->errors.errors.clear();
 		tkn.SetScript(this->script.c_str());

@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Parse\UtilityString.h">
-      <Filter>File di origine\Parse</Filter>
-    </ClInclude>
     <ClInclude Include="Parse\ErrorParse.h">
       <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
@@ -56,6 +53,18 @@
     </ClInclude>
     <ClInclude Include="VMliteB.h">
       <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\Map.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\UtilityString.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\Parse.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\Table.h">
+      <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +100,9 @@
     </ClCompile>
     <ClCompile Include="VMliteB.cxx">
       <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\Parse.cpp">
+      <Filter>File di origine\Parse</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

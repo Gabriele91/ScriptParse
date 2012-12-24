@@ -1,8 +1,8 @@
 #include "ErrorParse.h"
 
 void ErrorParse::PushError(unsigned int line,
-						  unsigned char errorType, 
-						  const char *addictioninfo){
+						   unsigned char errorType, 
+						   const std::string& addictioninfo){
 		Error error;
 		error.line=line;
 		error.error=errorType;
@@ -16,7 +16,7 @@ std::string ErrorParse::ToString(){
 		out+="error:"
 			 +String::ToString(errors[i].line)+":"
 			 +ErrorString[errors[i].error]
-			 +(errors[i].addictioninfo? std::string(", ")+errors[i].addictioninfo:"")
+		     +(errors[i].addictioninfo.length()? std::string(", ")+errors[i].addictioninfo:"")
 			 +"\n";
 			}
 			return out;
@@ -28,17 +28,20 @@ const char *ErrorParse::ErrorString[]={
 				"invalid statement", //STATEMENT
 				//
                 "invalid parse",  //PARSE,
+                "invalid syntax",  //SYNTAX,
                 "invalid variable", //VARIABLE,
                 "invalid number", //NUMBER,
                 "invalid string", //STRING,
 
                 "'do-while' parse error", //DO,
                 "'if' parse error", //IF,
-                "'eif' parse error", //EIF,
+                "'elif' parse error", //ELIF,
                 "'else' parse error", //ELSE,
                 "'while' parse error", //WHILE,
                 "'def' parse error", //DEF,
                 "'return' parse error", //RETURN,
+                "'break' parse error", //BREAK,
+                "'continue' parse error", //CONTINUE,
 
                 "'==' parse error",//EQ,
                 "'>' parse error",//GT,

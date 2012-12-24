@@ -7,13 +7,24 @@
 
 struct TreeNode{
 
+		enum AdditionalInfo{
+			IS_CALL,
+			IS_LESSNAME_CALL,
+			IS_HEADER,
+			IS_LESSNAME_HEADER,
+			IS_TOKEN,
+		};
+		/***************************/
 		int line;
 		Tokenizer::Token token;
 		std::string name;
+		AdditionalInfo info;
+		/*************************/
+		TreeNode *parent;
 		std::vector<TreeNode*> childs;
 		
 		TreeNode();
-		TreeNode(int line,Tokenizer::Token token,const std::string &name);
+		TreeNode(int line,Tokenizer::Token token,const std::string &name,AdditionalInfo info=IS_TOKEN);
 		~TreeNode();
 
 		TreeNode* PushChild(TreeNode* in);

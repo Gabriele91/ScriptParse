@@ -70,6 +70,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parse\ErrorParse.cpp" />
     <ClCompile Include="Parse\LexerTree.cpp" />
+    <ClCompile Include="Parse\Parse.cpp" />
     <ClCompile Include="Parse\Tokenizer.cpp" />
     <ClCompile Include="Parse\TreeNode.cpp" />
     <ClCompile Include="VMliteB.cxx" />
@@ -83,6 +84,9 @@
     <ClInclude Include="LbVariable.h" />
     <ClInclude Include="Parse\ErrorParse.h" />
     <ClInclude Include="Parse\LexerTree.h" />
+    <ClInclude Include="Parse\Map.h" />
+    <ClInclude Include="Parse\Parse.h" />
+    <ClInclude Include="Parse\Table.h" />
     <ClInclude Include="Parse\Tokenizer.h" />
     <ClInclude Include="Parse\TreeNode.h" />
     <ClInclude Include="Parse\UtilityString.h" />
