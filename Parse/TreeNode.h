@@ -29,6 +29,7 @@ struct TreeNode{
 
 		TreeNode* PushChild(TreeNode* in);
 		void RemoveChild(TreeNode* in);
+		int IndexChild(TreeNode* in);
 		void RemoveChild(int i);
 		void Change(int line,Tokenizer::Token token,const std::string &name);
 		int Size() const;

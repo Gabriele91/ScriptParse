@@ -24,6 +24,7 @@ struct TableTree{
 	}
 	//function table
 	struct FunctionTable{
+		std::string name;
 		TreeNode *root;
 		DUNORDERED_MAP<std::string,TreeNode* > args;
 		DUNORDERED_MAP<std::string,TreeNode* > locals;
@@ -54,6 +55,12 @@ struct TableTree{
 		if(functions.end()!=it) 
 			return (*it).second;
 		return NULL;
+	}
+	void PushFunction(const std::string& functionname,FunctionTable *table){
+		functions[functionname]=table;
+	}
+	void PushFunction(FunctionTable *table){
+		functions[table->name]=table;
 	}
 
 };

@@ -24,9 +24,6 @@
     <ClInclude Include="Parse\ErrorParse.h">
       <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
-    <ClInclude Include="Parse\LexerTree.h">
-      <Filter>File di intestazione\Parse</Filter>
-    </ClInclude>
     <ClInclude Include="Parse\Tokenizer.h">
       <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
@@ -60,18 +57,24 @@
     <ClInclude Include="Parse\UtilityString.h">
       <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
-    <ClInclude Include="Parse\Parse.h">
+    <ClInclude Include="Parse\Table.h">
       <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
-    <ClInclude Include="Parse\Table.h">
+    <ClInclude Include="Parse\IntCode.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\SyntaxTree.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\SemanticsChecking.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\ParseTree.h">
       <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Parse\ErrorParse.cpp">
-      <Filter>File di origine\Parse</Filter>
-    </ClCompile>
-    <ClCompile Include="Parse\LexerTree.cpp">
       <Filter>File di origine\Parse</Filter>
     </ClCompile>
     <ClCompile Include="Parse\Tokenizer.cpp">
@@ -101,7 +104,13 @@
     <ClCompile Include="VMliteB.cxx">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="Parse\Parse.cpp">
+    <ClCompile Include="Parse\SyntaxTree.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\SemanticsChecking.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\ParseTree.cpp">
       <Filter>File di origine\Parse</Filter>
     </ClCompile>
   </ItemGroup>

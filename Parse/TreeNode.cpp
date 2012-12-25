@@ -31,6 +31,10 @@ void TreeNode::RemoveChild(TreeNode* in){
 				}
 			}
 		}
+int TreeNode::IndexChild(TreeNode* in){
+		for(int i=0;i<Size();++i) if(childs[i]==in) return i;
+		return -1;		
+}
 void TreeNode::RemoveChild(int i){
 			if(i<Size())
 				childs.erase(childs.begin()+i);

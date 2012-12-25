@@ -1,15 +1,9 @@
 
+if(a*(1/3)){
+  c=(-1)*2
+}
+elif(0){
 
-a= def(c) { 
-	
-	do{
-		if(a<b){
-			continue
-		}
-		elif ((a=="c")*b+d) {
-			break
-		}
+}else{
 
-	}while(0)
-	
-	}
+}

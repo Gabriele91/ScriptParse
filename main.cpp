@@ -2,7 +2,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include "Parse/Parse.h"
+#include "Parse/ParseTree.h"
+#include "Parse/IntCode.h"
 
 //#define TEST_VM
 #define TEST_PARSE
@@ -123,15 +124,22 @@ int main(){
 		std::cout << GetStringToken(tkn.GetToken()) << std::endl;
 		tkn.NextToken();
 	}
-	/* test LexerTree  */
+	/* test SyntaxTree  */
 
-	Parse parse;
+	ParseTree parse;
 	TreeNode* tree=parse.StartParse(scriptexp);
 
 	std::cout <<"\nParse:" <<(!parse.FindErrors() ? "valid" : "invalid" )<< std::endl;
 	
-	if(!parse.FindErrors())
+	if(!parse.FindErrors()){
 		std::cout << "\nTree Parse:\n\n" <<tree->ToString()<< std::endl;
+		
+		ToIntCode tobytecode;
+		tobytecode.ParseTree(tree);
+		
+		std::cout <<"\n\n"<<tobytecode.ToString();
+		std::cout <<"\n\n"<<tobytecode.ToStringBasic();
+	}
 	else{
 		std::cout << parse.ErrorsToString();
 	}
