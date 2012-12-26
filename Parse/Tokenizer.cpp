@@ -385,14 +385,62 @@
 	
 
 	/* Skeep */
+	void Tokenizer::SkiepComments(){
+		//c++ style comments		
+		bool inCPPcomment=(*pointer)=='/'&&(*(pointer+1))=='/';
+		while(inCPPcomment && (*pointer)!='\0'&&(*pointer)!='\n'){
+			++pointer;			  
+			/* count line */
+			if((*pointer)=='\r'){ 
+				++countline; 
+				pointer+=(*(pointer+1)=='\n'); 
+			}else countline+=((*pointer)=='\n');			  
+			/* count line */
+			//cout line and jump if find '\\n' || \\r\n || \\r 
+			if((*pointer)=='\\'){
+				if((*(pointer+1))=='\r'){ 
+					++countline; 
+					pointer+=2;
+					pointer+=(*(pointer+2)=='\n'); 
+				}
+				else if((*(pointer+1))=='\n') {
+					++countline;
+					pointer+=2;
+				}
+			}
+		}
+		/* c style comments */
+		bool inCcomment=(*pointer)=='/'&&(*(pointer+1))=='*';
+		while(inCcomment && (*pointer)!='\0'){
+				 ++pointer;			  
+				 /* count line */
+				 if((*pointer)=='\r'){ 
+					++countline; 
+					pointer+=(*(pointer+1)=='\n'); 
+				 }else countline+=((*pointer)=='\n');			  
+				 /* count line */
+				 //if found */, exit!
+				 if((*pointer)=='*'&&(*(pointer+1))=='/'){
+					  pointer+=2;
+					  break;
+				 }
+			  }
+	}
 	void Tokenizer::SkipWhiteSpace(){
+		//skeep comments
+		SkiepComments();
+		//skeep space
 		while((*pointer)==' ' || (*pointer)=='\t'||
 			  (*pointer)=='\r'|| (*pointer)=='\n'){
-
-			  if((*pointer)=='\r')
-			  { ++countline; pointer+=(*(pointer+1)=='\n'); }
-			  else 
-			  countline+=((*pointer)=='\n');
+			  
+			  /* count line */
+			  if((*pointer)=='\r'){ 
+				++countline; 
+				pointer+=(*(pointer+1)=='\n'); 
+			  }else countline+=((*pointer)=='\n');			  
+			  /* count line */
+			  //skeep comments
+			  SkiepComments();
 
 			  ++pointer;
 		}

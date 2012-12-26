@@ -480,6 +480,10 @@
 						delete tree; 
 						return NULL;
 					}	
+					//push arg
+					headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+														   tkn.GetToken(),
+														   tkn.TokenValue()));	
 					// ','
 					tkn.NextToken();
 				}
@@ -588,6 +592,10 @@
 						delete tree; 
 						return NULL;
 					}	
+					//push arg
+					headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+														   tkn.GetToken(),
+														   tkn.TokenValue()));
 					// ','
 					tkn.NextToken();
 				}

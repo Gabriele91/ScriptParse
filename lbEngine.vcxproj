@@ -69,6 +69,7 @@
     <ClCompile Include="LbVariable.cxx" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parse\ErrorParse.cpp" />
+    <ClCompile Include="Parse\IntCode.cpp" />
     <ClCompile Include="Parse\SemanticsChecking.cpp" />
     <ClCompile Include="Parse\SyntaxTree.cpp" />
     <ClCompile Include="Parse\ParseTree.cpp" />
@@ -78,12 +79,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LbApi.h" />
+    <ClInclude Include="LbBycode.h" />
     <ClInclude Include="LbError.h" />
     <ClInclude Include="LbFunction.h" />
     <ClInclude Include="LbString.h" />
     <ClInclude Include="LbType.h" />
     <ClInclude Include="LbVariable.h" />
     <ClInclude Include="Parse\ErrorParse.h" />
+    <ClInclude Include="Parse\GenByteCode.h" />
     <ClInclude Include="Parse\IntCode.h" />
     <ClInclude Include="Parse\SemanticsChecking.h" />
     <ClInclude Include="Parse\SyntaxTree.h" />

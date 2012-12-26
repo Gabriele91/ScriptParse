@@ -4,6 +4,7 @@
 #include <sstream>
 #include "Parse/ParseTree.h"
 #include "Parse/IntCode.h"
+#include "Parse/GenByteCode.h"
 
 //#define TEST_VM
 #define TEST_PARSE
@@ -139,6 +140,17 @@ int main(){
 		
 		std::cout <<"\n\n"<<tobytecode.ToString();
 		std::cout <<"\n\n"<<tobytecode.ToStringBasic();
+
+		GenByteCode gen;
+		gen.ParseIntermedieCode(&tobytecode);
+		std::cout <<"\n\n"<<tobytecode.ToStringBasic();
+		LbBytecode *bytecode=gen.AllocLbBytecode();
+		VMliteB *liteB=VMliteB_Create(bytecode->commands,bytecode->lenCommands,
+									  bytecode->variables,bytecode->variablescount,
+									  bytecode->functions,bytecode->functionscount);
+		VMliteB_Exec(liteB);
+		VMliteB_Print(liteB);
+		VMliteB_Free(liteB);
 	}
 	else{
 		std::cout << parse.ErrorsToString();

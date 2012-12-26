@@ -20,5 +20,11 @@ set define:
 DUNORDERED_MULTIMAP std::map
 DUNORDERED_MULTIMAP std::multimap
 **/
+/* Utility */
+template <typename M, typename V> void MapToVec( const  M & m, V & v ) {
+    for( typename M::const_iterator it = m.begin(); it != m.end(); ++it ) {
+    	v.push_back( it->second );
+    }
+}
 
 #endif

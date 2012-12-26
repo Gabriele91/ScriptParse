@@ -72,6 +72,12 @@
     <ClInclude Include="Parse\ParseTree.h">
       <Filter>File di intestazione\Parse</Filter>
     </ClInclude>
+    <ClInclude Include="Parse\GenByteCode.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="LbBycode.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Parse\ErrorParse.cpp">
@@ -111,6 +117,9 @@
       <Filter>File di origine\Parse</Filter>
     </ClCompile>
     <ClCompile Include="Parse\ParseTree.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\IntCode.cpp">
       <Filter>File di origine\Parse</Filter>
     </ClCompile>
   </ItemGroup>

@@ -108,7 +108,8 @@ struct Tokenizer{
 
 	/* Skeep */
 	void SkipWhiteSpace();
-	
+	void SkiepComments();
+
 	/* Token parse */
 	void DeterminateToken();
 	void SkipToken();
