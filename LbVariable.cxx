@@ -146,6 +146,21 @@ uchar LbVariable_Eq(LbVariable *ptr0,LbVariable *ptr1,LbVariable *ptr2){
 
         return VALUE_NO_ERROR;
 }
+uchar LbVariable_NotEq(LbVariable *ptr0,LbVariable *ptr1,LbVariable *ptr2){
+
+        if(LBV_ISANUMBER(ptr1)&&LBV_ISANUMBER(ptr2)){
+            ptr0->var.number=ptr1->var.number!=ptr2->var.number;
+        }
+        else
+        if(LBV_ISASTRING(ptr1)&&LBV_ISASTRING(ptr2)){
+            ptr0->var.number=strcmp(ptr1->var.string.str,ptr2->var.string.str)!=0;
+        }
+        else{
+            ptr0->var.number=1;
+        }
+
+        return VALUE_NO_ERROR;
+}
 uchar LbVariable_GtEq(LbVariable *ptr0,LbVariable *ptr1,LbVariable *ptr2){
         LbVariable_Clean(ptr0);
         if(LBV_ISANUMBER(ptr1)&&LBV_ISANUMBER(ptr2)){

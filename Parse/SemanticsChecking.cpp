@@ -19,10 +19,11 @@ TreeNode* SemanticsChecking::ValidateExpString(TreeNode* node){
 			case Tokenizer::NOT:
 				return node;
 			break;
-			//if == || && return true
+			//if == != || && return true
 			case Tokenizer::OR:
 			case Tokenizer::AND:
 			case Tokenizer::EQ: 
+			case Tokenizer::NOTEQ: 
 				return NULL;
 			break;
 			//else return true
@@ -79,7 +80,7 @@ TreeNode* SemanticsChecking::ValidLessNameFunction(TreeNode* node){
 		}
 		return nodenotvalid;
 	}
-/* BREAK AND CONTINUE MUST TO BE INTO do-while or while block  */
+/* BREAK AND CONTINUE MUST TO BE INTO do-while, while or for block  */
 TreeNode* SemanticsChecking::ValidBreakContinue(TreeNode* node){
 		if(node->token==Tokenizer::BREAK||
 		   node->token==Tokenizer::CONTINUE){
@@ -87,6 +88,7 @@ TreeNode* SemanticsChecking::ValidBreakContinue(TreeNode* node){
 			for(p=node->parent;p;p=p->parent){
 				if(p->token==Tokenizer::DO) break;
 				if(p->token==Tokenizer::WHILE) break;
+				if(p->token==Tokenizer::FOR) break;
 				if(p->token==Tokenizer::DEF){ p=NULL; break; }
 			}
 			//errors

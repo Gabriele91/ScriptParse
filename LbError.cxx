@@ -10,8 +10,9 @@ const char *LbErrorLog[]={
         "stack[i-1]-stack[i], must to be numbers",
         "stack[i-1]*stack[i], must to be numbers",
         "stack[i-1]/stack[i], must to be numbers",
-
+		
         "stack[i-1]==stack[i]",
+        "stack[i-1]!=stack[i]",
         "stack[i-1]>=stack[i], must to be numbers",
         "stack[i-1]<=stack[i], must to be numbers",
         "stack[i-1]>stack[i], must to be numbers",

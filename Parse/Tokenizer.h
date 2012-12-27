@@ -17,6 +17,7 @@ struct Tokenizer{
 		ELSE,  //else{}
 		ELIF,    //<if>elif(){}
 		DEF,    //def(<args>){}
+		FOR,    //for(<assignament>,<exp>, <assignament>){}
 		RETURN, // return(<exp>)
 		BREAK,    //break
 		CONTINUE, //continue
@@ -26,6 +27,7 @@ struct Tokenizer{
 		MUL,    // *
 		DIV,    // /
 		EQ,     // ==
+		NOTEQ,  // !=
 		GT,     // >
 		LT,     // <
 		GTE,    // >=
@@ -81,9 +83,10 @@ struct Tokenizer{
 	bool IsLogicOr();
 	void SkipLogicAO();
 	bool IsEQ();
+	bool IsNOTEQ();
 	bool IsGTE();
 	bool IsLTE();
-	void SkipEGL();
+	void SkipNEGL();
 
 	/* key words */
 	bool IsIf();
@@ -92,6 +95,7 @@ struct Tokenizer{
 	bool IsDo();
 	bool IsWhile();
 	bool IsDef();
+	bool IsFor();
 	bool IsReturn();
 	bool IsBreak();
 	bool IsContinue();
@@ -101,6 +105,7 @@ struct Tokenizer{
 	void SkipDo();
 	void SkipWhile();
 	void SkipDef();
+	void SkipFor();
 	void SkipReturn();;
 	void SkipBreak();
 	void SkipContinue();

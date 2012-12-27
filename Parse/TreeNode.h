@@ -12,6 +12,7 @@ struct TreeNode{
 			IS_LESSNAME_CALL,
 			IS_HEADER,
 			IS_LESSNAME_HEADER,
+			IS_FOR_HEADER,
 			IS_TOKEN,
 		};
 		/***************************/

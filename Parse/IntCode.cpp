@@ -32,19 +32,22 @@ std::string ToIntCode::ToStringBasic(){
 	}
 void ToIntCode::ParseTree(TreeNode* node){
 		int tmp_label=0;
+		int tmp_label_if=0;
 		this->root=node;
 		//find function, and replace whit variable
 		GetFunctionAndReplaceWithVariabe(node);
 		//for all statements in root
-		for(int i=0;i<root->Size();++i)
-			GenInitBitecode(intCode,(*root)[i],tmp_label,tmp_label);
+		for(int i=0;i<root->Size();++i){
+			GenInitBitecode(intCode,(*root)[i],tmp_label,tmp_label_if);
+		}
 		//Optimization
 		MathOptimizazione(intCode);
 		//for all function
 		for(int f=0;f<functions.size();++f){
 			//for all statements in function
-			for(int i=1;i<functions[f].root->Size();++i)
-				GenInitBitecode(functions[f].intCode,(*functions[f].root)[i],tmp_label,tmp_label);
+			for(int i=1;i<functions[f].root->Size();++i){
+				GenInitBitecode(functions[f].intCode,(*functions[f].root)[i],tmp_label,tmp_label_if);
+			}
 			//Optimization
 			MathOptimizazione(functions[f].intCode);
 		}
@@ -125,8 +128,8 @@ void ToIntCode::GetFunctionAndReplaceWithVariabe(TreeNode* node){
 	}
 void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 								TreeNode* node,
-								int labelcount,
-								int labelcountif){
+								int& labelcount,
+								int& labelcountif){
 		
 		IntCode tmp;
 		tmp.token=node->token;
@@ -215,8 +218,9 @@ void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 			break;
 		BYTECODE_DUAL_OP(MUL,LB_MUL)
 		BYTECODE_DUAL_OP(DIV,LB_DIV)
-
+		
 		BYTECODE_DUAL_OP(EQ,LB_EQ)
+		BYTECODE_DUAL_OP(NOTEQ,LB_NOTEQ)
 		BYTECODE_DUAL_OP(GT,LB_GT)
 		BYTECODE_DUAL_OP(LT,LB_LT)
 		BYTECODE_DUAL_OP(GTE,LB_GTEQ)
@@ -287,6 +291,55 @@ void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 			intCode.push_back(tmp);	
 			/* end */
 			break;
+		case Tokenizer::FOR:
+			/* parse assignaments (first part) */
+			for(int i=0;i<node->childs[0]->childs[0]->Size();++i)
+				GenInitBitecode(intCode,node->childs[0]->childs[0]->childs[i],labelcount,labelcountif);
+			//increment count label
+			++labelcount;
+			/* save label */
+			tmp_line=labelcount;
+			/* push label */
+			tmp.opcode=-1;
+			tmp.name=".startfor$"+String::ToString(tmp_line);
+			tmp.isconst=true;
+			tmp.label=true;
+			intCode.push_back(tmp);	
+			/* parse exp */
+			GenInitBitecode(intCode,node->childs[0]->childs[1]->childs[0],labelcount,labelcountif);	
+			/* push exp */
+			tmp.opcode=LB_IF0;
+			tmp.name=".end$"+String::ToString(tmp_line);
+			tmp.isconst=true;
+			tmp.label=false;
+			intCode.push_back(tmp);	
+			/* parse statements */
+			for(int i=1;i<node->Size();++i)
+				GenInitBitecode(intCode,node->childs[i],labelcount,labelcountif);	
+			/* push label */
+			tmp.opcode=-1;
+			tmp.name=".start$"+String::ToString(tmp_line);;
+			tmp.isconst=true;
+			tmp.label=true;
+			intCode.push_back(tmp);	
+			/* parse assignaments (last part) */
+			for(int i=0;i<node->childs[0]->childs[2]->Size();++i)
+				GenInitBitecode(intCode,node->childs[0]->childs[2]->childs[i],labelcount,labelcountif);
+			/* goto to exp (loop)*/
+			tmp.opcode=LB_GOTO;
+			tmp.name=".startfor$"+String::ToString(tmp_line);
+			tmp.isconst=true;
+			tmp.label=false;
+			intCode.push_back(tmp);	
+			/* push label exit while */
+			label_code=".end$"+String::ToString(tmp_line);
+			tmp.label=true;
+			tmp.opcode=-1;
+			tmp.name=label_code;
+			tmp.isconst=true;
+			intCode.push_back(tmp);	
+			/* end */
+			break;
 		case Tokenizer::DO:			
 			//increment count label
 			++labelcount;
@@ -294,18 +347,24 @@ void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 			tmp_line=labelcount;
 			/* push label */
 			tmp.opcode=-1;
-			tmp.name=".start$"+String::ToString(tmp_line);;
+			tmp.name=".startdo$"+String::ToString(tmp_line);;
 			tmp.isconst=true;
 			tmp.label=true;
 			intCode.push_back(tmp);				
 			/* parse statements */
 			for(int i=0;i<(node->Size()-1);++i)
-				GenInitBitecode(intCode,node->childs[i],labelcount,labelcountif);
+				GenInitBitecode(intCode,node->childs[i],labelcount,labelcountif);			
+			/* push label */
+			tmp.opcode=-1;
+			tmp.name=".start$"+String::ToString(tmp_line);;
+			tmp.isconst=true;
+			tmp.label=true;
+			intCode.push_back(tmp);	
 			/* parse exp */
 			GenInitBitecode(intCode,node->childs[(node->Size()-1)],labelcount,labelcountif);	
 			/* push exp */
 			tmp.opcode=LB_IF;
-			tmp.name=".start$"+String::ToString(tmp_line);
+			tmp.name=".startdo$"+String::ToString(tmp_line);
 			tmp.isconst=true;
 			tmp.label=false;
 			intCode.push_back(tmp);				

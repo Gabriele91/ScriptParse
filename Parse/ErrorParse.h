@@ -26,11 +26,13 @@ struct ErrorParse{
                 ELSE,
                 WHILE,
 				DEF,
+				FOR,
 				RETURN,
 				BREAK,
 				CONTINUE,
 
                 EQ,
+				NOTEQ,
                 GT,
                 LT,
                 GTE,

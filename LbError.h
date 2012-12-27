@@ -26,6 +26,7 @@ enum EnLbErrorLog{
         ERROR_DIV,
         /////////////
         ERROR_EQ,
+        ERROR_NOTEQ,
         ERROR_GTEQ,
         ERROR_LTEQ,
         ERROR_GT,

@@ -31,6 +31,7 @@
     *  <statement_elif> := elif '(' <exp> ')' '{' [{<statement>}]  '}'
     *  <statement_else> := else '{' [{<statement>}]  '}'
     *  <statement_while> := while '(' <exp> ')' '{' [{<statement>}]  '}'
+    *  <statement_for> := for '(' [{<statement_assignament>}] , <exp>, [{<statement_assignament>}] ')' '{' [{<statement>}]  '}'
     *  <statement_do> := do '{' [{<statement>}] '}'  while '(' <exp> ')'
     *  <statement_assignament> := <VARIABLE> '=' <exp>
     *  <statement_function> := 'def' <VARIABLE> ['(' [<ARGS>] ')']'{' [{<statement>}] '}'
@@ -47,7 +48,7 @@
     *    op_logic: '&&' | '||'
 
     *   compare := <base> { <op_compare> <base> }
-    *   op_compare := '=='| '<' | '>' | '<=' | '>='
+    *   op_compare := '=='| '!=' | '<' | '>' | '<=' | '>=' 
 
     *   base  := <term> { <op_livel1> <term> }
     *    op_livel1 : '+' | '-'
@@ -203,8 +204,7 @@
     *        /   \       
     *       /     \
     *    <exp>   <statement>
-    *    
-    
+    *  
     *****************
     DO-WHILE TREE:
     *****************
@@ -212,8 +212,21 @@
     *        /   \       
     *       /     \
     * <statement> <exp>
-    *
+    *	  
 
+    *****************
+    FOR TREE:
+    *****************
+    *        <for>_____________
+    *        /				   \       
+    *       /					\
+    *   none(for_header)	<statement>
+	*    |     |      |
+    *    |     |      |
+	*    |    <exp>   |
+	*   none         none
+	*  | | |        | | |
+	* statement_assignament
 
 */
 
@@ -238,6 +251,7 @@ struct SyntaxTree{
 
     TreeNode* ParseWhile();
     TreeNode* ParseDo();
+    TreeNode* ParseFor();
 	TreeNode* ParseBreak();
 	TreeNode* ParseContinue();
 

@@ -141,6 +141,14 @@ extern uchar LbVariable_Div(LbVariable *ptr1,LbVariable *ptr2);
 */
 extern uchar LbVariable_Eq(LbVariable *ptr0,LbVariable *ptr1,LbVariable *ptr2);
 /**
+* Operator !=
+* @param LbVariable pointer
+* @param LbVariable pointer
+* @param LbVariable pointer
+* @return uchar (get errors)
+*/
+extern uchar LbVariable_NotEq(LbVariable *ptr0,LbVariable *ptr1,LbVariable *ptr2);
+/**
 * Operator >= (GT)
 * @param LbVariable pointer
 * @param LbVariable pointer

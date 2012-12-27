@@ -159,11 +159,12 @@
 		TreeNode *right=NULL;
 		/* nodes */	
 		if(NOT(left=ParseBase())) return NULL; //<base>
-		while(ISTOKEN(EQ) ||
-			  ISTOKEN(GT) ||
-			  ISTOKEN(LT) ||
-			  ISTOKEN(GTE)||
-			  ISTOKEN(LTE)){ //'==' | '>' | '<' | '>=' | '<=' 
+		while(ISTOKEN(EQ)    ||
+			  ISTOKEN(NOTEQ) ||
+			  ISTOKEN(GT)    ||
+			  ISTOKEN(LT)    ||
+			  ISTOKEN(GTE)   ||
+			  ISTOKEN(LTE)){ //'==' | '!=' | '>' | '<' | '>=' | '<=' 
 				//before tree				  
 				if(tree) left=tree;
 				/* make tree */
@@ -382,6 +383,78 @@
 		tkn.NextToken();
 		//return do-tree
 		return tree;
+	}
+	TreeNode* SyntaxTree::ParseFor(){
+		TreeNode *leaf=NULL;
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		/**** PARSE FOR HEADER ****/
+		/*    make header for     */
+		TreeNode *for_header= new TreeNode(tkn.GetLine(),
+										   Tokenizer::NONE,
+									       "",
+										   TreeNode::IS_FOR_HEADER);
+		tree->PushChild(for_header);
+
+		TreeNode *for_left= new TreeNode(tkn.GetLine(),
+										   Tokenizer::NONE,
+									       "",
+										   TreeNode::IS_TOKEN);
+		TreeNode *for_center= new TreeNode(tkn.GetLine(),
+										   Tokenizer::NONE,
+									       "",
+										   TreeNode::IS_TOKEN);
+		TreeNode *for_right= new TreeNode(tkn.GetLine(),
+										   Tokenizer::NONE,
+									       "",
+										   TreeNode::IS_TOKEN);
+		for_header->PushChild(for_left);
+		for_header->PushChild(for_center);
+		for_header->PushChild(for_right);
+		/* ---------------------------- */
+
+		//LPR '(' ?
+		tkn.NextToken();
+		if(NOTTOKEN(LPR)){ ERROR_(LPR); delete tree; return NULL; }
+		// { <assignaments> }  | ','
+		tkn.NextToken();
+		while(NOTTOKEN(COMMA)){
+			if(NOT(leaf=ParseAssignament())){ delete tree; return NULL; }
+			for_left->PushChild(leaf);
+			//IS THE END OR FOUND A INVALID KEY ??
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(COMMA); delete tree; return NULL; }	 
+		}	
+		//<exp>
+		tkn.NextToken();
+		if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
+		for_center->PushChild(leaf);
+		//COMMA ',' ?
+		if(NOTTOKEN(COMMA)){ ERROR_(COMMA); delete tree; return NULL; }
+		// { <assignaments> }  | ')'
+		tkn.NextToken();
+		while(NOTTOKEN(RPR)){
+			if(NOT(leaf=ParseAssignament())){ delete tree; return NULL; }
+			for_right->PushChild(leaf);
+			//IS THE END OR FOUND A INVALID KEY ??
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RPR); delete tree; return NULL; }	 
+		}	
+		/* ) */ 
+		tkn.NextToken();
+		/****** PARSE BODY FOR *******/
+		//LS '{' ?
+		if(NOTTOKEN(LS)){ ERROR_(LS); delete tree; return NULL; }
+		// <statement>  | '}'
+		tkn.NextToken();
+		while(NOTTOKEN(RS)){
+			if(NOT(leaf=ParseStatement())){ delete tree; return NULL; }
+			tree->PushChild(leaf);
+			//IS THE END OR FOUND A INVALID KEY ??
+			if(ISTOKEN(END)||ISTOKEN(INVALID)){ ERROR_(RS); delete tree; return NULL; }	 
+		}		
+		/* '}' */
+		tkn.NextToken();
+		return tree; 
 	}
 	TreeNode* SyntaxTree::ParseBreak(){
 		TreeNode *leaf=NULL;
@@ -715,12 +788,17 @@
 		break;
 		case Tokenizer::WHILE:
 			tmp=ParseWhile();
-			if(NOT(tmp)) ERROR_L(WHILE,"invalid definiction loop",lineCode);
+			if(NOT(tmp)) ERROR_L(WHILE,"invalid definiction loop (while)",lineCode);
 			return tmp; 
 		break;
 		case Tokenizer::DO:
 			tmp=ParseDo();
-			if(NOT(tmp)) ERROR_L(DO,"invalid definiction loop",lineCode);
+			if(NOT(tmp)) ERROR_L(DO,"invalid definiction loop (do-while)",lineCode);
+			return tmp; 
+		break;
+		case Tokenizer::FOR:
+			tmp=ParseFor();
+			if(NOT(tmp)) ERROR_L(FOR,"invalid definiction loop (for) ",lineCode);
 			return tmp; 
 		break;
 		case Tokenizer::DEF:

@@ -39,11 +39,13 @@ const char *ErrorParse::ErrorString[]={
                 "'else' parse error", //ELSE,
                 "'while' parse error", //WHILE,
                 "'def' parse error", //DEF,
+                "'for' parse error", //FOR,
                 "'return' parse error", //RETURN,
                 "'break' parse error", //BREAK,
                 "'continue' parse error", //CONTINUE,
-
+				
                 "'==' parse error",//EQ,
+                "'!=' parse error",//NOTEQ,
                 "'>' parse error",//GT,
                 "'<' parse error",//LT,
                 "'>=' parse error",//GTE,
@@ -66,5 +68,5 @@ const char *ErrorParse::ErrorString[]={
 				"',' parse error",//COMMA,
 				"EOF parse error",//END,
 				"indeterminate parse error",//INVALID 
-				"token->?NONE?<-token",//NONE    
+				"token->?NONE?<-token" //NONE    
 };

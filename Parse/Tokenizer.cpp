@@ -52,6 +52,9 @@
 		case Tokenizer::WHILE:
 			return "while";
 			break;		
+		case Tokenizer::FOR:
+			return "for";
+			break;				
 		case Tokenizer::DEF:
 			return "def";
 			break;		
@@ -90,6 +93,9 @@
 			return "/";
 		case Tokenizer::EQ:
 			return "==";
+			break;		
+		case Tokenizer::NOTEQ:
+			return "!=";
 			break;		
 		case Tokenizer::GT:
 			return ">";
@@ -289,13 +295,16 @@
 	bool Tokenizer::IsEQ(){
 		return (*pointer=='=') && (*(pointer+1)=='=');
 	}
+	bool Tokenizer::IsNOTEQ(){
+		return (*pointer=='!') && (*(pointer+1)=='=');
+	}
 	bool Tokenizer::IsGTE(){
 		return (*pointer=='>') && (*(pointer+1)=='=');
 	}	
 	bool Tokenizer::IsLTE(){
 		return (*pointer=='<') && (*(pointer+1)=='=');
 	}
-	void Tokenizer::SkipEGL(){		
+	void Tokenizer::SkipNEGL(){		
 		pointer+=2;
 	}
 
@@ -329,6 +338,11 @@
 		return (*pointer=='d') && 
 			   (*(pointer+1)=='e') && 
 			   (*(pointer+2)=='f');		
+	}	
+	bool Tokenizer::IsFor(){
+		return (*pointer=='f') && 
+			   (*(pointer+1)=='o') && 
+			   (*(pointer+2)=='r');		
 	}	
 	bool Tokenizer::IsReturn(){
 		return (*pointer=='r') && 
@@ -371,6 +385,9 @@
 		pointer+=5;
 	}
 	void Tokenizer::SkipDef(){
+		pointer+=3;
+	}
+	void Tokenizer::SkipFor(){
 		pointer+=3;
 	}
 	void Tokenizer::SkipReturn(){
@@ -439,10 +456,9 @@
 				pointer+=(*(pointer+1)=='\n'); 
 			  }else countline+=((*pointer)=='\n');			  
 			  /* count line */
+			  ++pointer;
 			  //skeep comments
 			  SkiepComments();
-
-			  ++pointer;
 		}
 	}	
 	
@@ -452,11 +468,12 @@
 		SkipWhiteSpace();
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
 		if(IsIf())			type=IF; else 
-		if(IsElif())			type=ELIF; else 
+		if(IsElif())		type=ELIF; else 
 		if(IsElse())		type=ELSE; else 
 		if(IsDo())			type=DO; else 
 		if(IsWhile())		type=WHILE; else
 		if(IsDef())			type=DEF; else
+		if(IsFor())			type=FOR; else
 		if(IsReturn())		type=RETURN; else
 		if(IsBreak())		type=BREAK; else
 		if(IsContinue())	type=CONTINUE; else
@@ -464,7 +481,14 @@
 		if(IsVariable())    type=VARIABLE; else 
 		if(IsNumber())		type=NUMBER; else 
 		if(IsString())		type=STRING; else 
-
+			
+		if(IsEQ())			type=EQ; else
+		if(IsNOTEQ())		type=NOTEQ; else
+		if(IsGTE())			type=GTE; else
+		if(IsLTE())			type=LTE; else
+		if(IsLogicAnd())    type=AND; else
+		if(IsLogicOr())     type=OR; else
+	    /* IMPORTANT: not after not equal */
 		if(*pointer == '+') type=ADD; else
 		if(*pointer == '-') type=MIN; else
 		if(*pointer == '*') type=MUL; else
@@ -472,11 +496,6 @@
 		if(*pointer == '!') type=NOT; else
 		if(*pointer == '>') type=GT; else
 		if(*pointer == '<') type=LT; else
-		if(IsEQ())			type=EQ; else
-		if(IsGTE())			type=GTE; else
-		if(IsLTE())			type=LTE; else
-		if(IsLogicAnd())    type=AND; else
-		if(IsLogicOr())     type=OR; else
 
 		if(*pointer == '(') type=LPR; else
 		if(*pointer == ')') type=RPR; else
@@ -498,6 +517,7 @@
 		if(type==DO)	 SkipDo(); else
 		if(type==WHILE)  SkipWhile(); else
 		if(type==DEF)    SkipDef(); else
+		if(type==FOR)    SkipFor(); else
 		if(type==RETURN)   SkipReturn(); else
 		if(type==BREAK)    SkipBreak(); else
 		if(type==CONTINUE) SkipContinue(); else
@@ -505,7 +525,14 @@
 		if(type==VARIABLE) SkipVariable(); else
 		if(type==NUMBER) SkipNumber(); else
 		if(type==STRING) SkipString(); else
-
+			
+		if(type==NOTEQ)  SkipNEGL(); else
+		if(type==EQ)     SkipNEGL(); else
+		if(type==GTE)    SkipNEGL(); else
+		if(type==LTE)    SkipNEGL(); else
+		if(type==AND) SkipLogicAO(); else
+		if(type==OR)  SkipLogicAO(); else
+	    /* IMPORTANT: not after not equal */
 		if(type==ADD) ++pointer; else
 		if(type==MIN) ++pointer; else
 		if(type==MUL) ++pointer; else
@@ -513,11 +540,6 @@
 		if(type==NOT) ++pointer; else
 		if(type==GT)  ++pointer; else
 		if(type==LT)  ++pointer; else
-		if(type==EQ)  SkipEGL(); else
-		if(type==GTE) SkipEGL(); else
-		if(type==LTE) SkipEGL(); else
-		if(type==AND) SkipLogicAO(); else
-		if(type==OR)  SkipLogicAO(); else
 
 		if(type==LPR) ++pointer; else
 		if(type==RPR) ++pointer; else

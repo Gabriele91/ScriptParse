@@ -44,8 +44,9 @@ enum Commands{
         LB_MIN,
         LB_MUL,
         LB_DIV,
-
+		
         LB_EQ,
+        LB_NOTEQ,
         LB_GTEQ,
         LB_LTEQ,
         LB_GT,

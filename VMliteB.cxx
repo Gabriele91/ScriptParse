@@ -129,6 +129,9 @@ if(CR_ID_STACK(B)>0){\
 void LbCmd_EQ(VMliteB *B){
     OP_VAR3(Eq,EQ)
 }
+void LbCmd_NOTEQ(VMliteB *B){
+    OP_VAR3(NotEq,NOTEQ)
+}
 void LbCmd_GTEQ(VMliteB *B){
     OP_VAR3(GtEq,GTEQ)
 }
@@ -307,6 +310,7 @@ LbFnCommands listCommands[]={
         LbCmd_MUL,
         LbCmd_DIV,
         LbCmd_EQ,
+		LbCmd_NOTEQ,
         LbCmd_GTEQ,
         LbCmd_LTEQ,
         LbCmd_GT,
@@ -344,8 +348,9 @@ extern const char* LbCommandsString[]={
      "LB_MIN",
      "LB_MUL",
      "LB_DIV",
-
+	 
      "LB_EQ",
+     "LB_NOTEQ",
      "LB_GTEQ",
      "LB_LTEQ",
      "LB_GT",
