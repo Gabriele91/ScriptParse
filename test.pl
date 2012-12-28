@@ -1,17 +1,16 @@
 
-for(a=0, a<100, a=a+1){
-		
-		do{
-			b=b+1
-		}while(b<a+20)		
-		do{
-			c=c+1
-		}while(c<a+22)
-			
-		do{
-			d=d+1
-			if(d>2){ break }
-			if(d>110){ continue }
-		}while(d<a+32)
-
+def a(x){ 	
+	global a
+	a=5+x
+	tmp_a=a
+	def l(){
+		return ("ciao")
+	}
+	if(a>9){ return(l()) }
+	local a
+	return (a(tmp_a))
 }
+
+
+a=a(0)
+

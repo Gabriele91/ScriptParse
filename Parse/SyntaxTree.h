@@ -24,7 +24,11 @@
                       <statement_do> | 
                       <statement_assignament> |
                       <statement_function> |
-                      <statement_call>    
+                      <statement_call> |
+					  <statement_break>|
+					  <statement_continue>|
+					  <statement_global>|
+					  <statement_local>
                       
 
     *  <statement_if> := if '(' <exp> ')' '{' [{<statement>}]  '}' { <statement_elif> } [ <statement_else> ]
@@ -38,6 +42,8 @@
     *  <statement_return>    := 'return' '(' <exp> ')'
     *  <statement_break>    := 'break'
     *  <statement_continue>    := 'continue'
+    *  <statement_global>    := 'global' <VARIABLE>
+    *  <statement_local>    := 'local' <VARIABLE>
     *  <call> :=  <VARIABLE> '(' <exp>  { ',' <exp> } ')'
     *  <ARGS> :=  <VARIABLE> { ',' <VARIABLE> }
     *
@@ -228,6 +234,22 @@
 	*  | | |        | | |
 	* statement_assignament
 
+	*****************
+    GLOBAL TREE:
+    *****************
+    *    <global>
+    *       |
+    *       |
+    *   <variable>
+    *	
+	*****************
+    LOCAL TREE:
+    *****************
+    *    <local>
+    *       |
+    *       |
+    *   <variable>
+    *
 */
 
 struct SyntaxTree{
@@ -254,6 +276,9 @@ struct SyntaxTree{
     TreeNode* ParseFor();
 	TreeNode* ParseBreak();
 	TreeNode* ParseContinue();
+
+	TreeNode* ParseLocal();
+	TreeNode* ParseGlobal();
 
     TreeNode* ParseAssignament();
     

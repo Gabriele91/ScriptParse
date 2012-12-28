@@ -30,6 +30,8 @@ struct ErrorParse{
 				RETURN,
 				BREAK,
 				CONTINUE,
+				GLOBAL,
+				LOCAL,
 
                 EQ,
 				NOTEQ,
@@ -60,7 +62,8 @@ struct ErrorParse{
 
             };
 	struct Error{ 
-				unsigned int line; 
+				unsigned int line;
+				unsigned int column; 
 				unsigned char error;
 				std::string   addictioninfo;
 			};
@@ -69,6 +72,7 @@ struct ErrorParse{
 	static const char *ErrorString[];
 
 	void PushError(unsigned int line, 
+				   unsigned int column, 
 				   unsigned char errorType, 
 				   const std::string& addictioninfo);
 

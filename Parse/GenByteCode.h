@@ -1,6 +1,7 @@
 #ifndef GEN_BYTE_CODE_H
 #define GEN_BYTE_CODE_H
 
+#include <vector>
 #include "Map.h"
 #include "IntCode.h"
 #include "../LbBycode.h"
@@ -28,6 +29,32 @@ struct GenByteCode{
 		std::vector<ToIntCode::IntCode>* intcode;
 		int id_var;
 		std::string name;
+		/* scope */
+		std::vector<TreeNode*> vGlobalLocal;
+		void BuildListGLobalLocal(TreeNode *node=NULL){	
+			if(node==NULL){ node=funroot; }
+			else
+			if(node->token==Tokenizer::GLOBAL||
+			   node->token==Tokenizer::LOCAL) 
+				vGlobalLocal.push_back(node);
+
+			for(int i=0;i<node->Size();++i){
+				BuildListGLobalLocal((*node)[i]);
+			}
+		}
+		bool GetLineScopeGlobal(const std::string& var,int line,int column){
+			const TreeNode& node=*funroot;
+			bool isglobal=false;
+			for(int i=0;i<vGlobalLocal.size();++i){
+				if(vGlobalLocal[i]->line>line) break;
+				if(vGlobalLocal[i]->line==line && vGlobalLocal[i]->column>column) break;
+				if(var==(*vGlobalLocal[i])[0]->name){
+					   isglobal=vGlobalLocal[i]->token==Tokenizer::GLOBAL;
+				}
+			}
+			return isglobal;
+		}
+		/*  */
 		DUNORDERED_MAP<std::string,Variable> args_map;
 		DUNORDERED_MAP<std::string,Variable> local_map;
 	};
@@ -62,12 +89,13 @@ struct GenByteCode{
 		for(mapfunctionit it=global_function_map.begin();
 			it!=global_function_map.end();
 			it++){
+			//seep 4.2, take global/local variables;
+			(*it).second.BuildListGLobalLocal();
 			//step 4.5, take args map
-			GetArgsVariableFunctionMap((*it).second.funroot,(*it).second.args_map);			
+			GetArgsVariableFunctionMap((*it).second.funroot,(*it).second);			
 			//take local map and set id		
 			SetVariableFunctionMap(count_global_vars,
-								   (*it).second.args_map,
-								   (*it).second.local_map,
+								   (*it).second,
 								   *(*it).second.intcode);			
 			//step 5, remove label
 			tmplabel.clear();
@@ -168,51 +196,81 @@ protected:
 		}
 	}
 
-	void GetArgsVariableFunctionMap(TreeNode *funroot,mapvariable& varmapargs){
+	void GetArgsVariableFunctionMap(TreeNode *funroot,
+									Function& function){
+		/*
+		insert first arg:function
+		*/
+		Variable tmp;
+		tmp.id_var=0;//first
+		tmp.value=function.name;
+		tmp.is_string=false;
+		tmp.line=funroot->line;
+		function.args_map.insert(mapvariableinsert(function.name,tmp));
+		/**/
 		int coutargs=funroot->childs[0]->Size();
 		for(int i=0;i<coutargs;++i){
-			Variable tmp;
-			tmp.id_var=i;
+			tmp.id_var=i+1;//+first
 			tmp.value=funroot->childs[0]->childs[i]->name;
 			tmp.is_string=false;
 			tmp.line=funroot->childs[i]->line;
-			varmapargs.insert(mapvariableinsert(funroot->childs[0]->childs[i]->name,tmp));
+			function.args_map.insert(mapvariableinsert(funroot->childs[0]->childs[i]->name,tmp));
 		}
 	}
 
 	void SetVariableFunctionMap(int& id_var_count,
-								mapvariable& varmapargs,
-								mapvariable& varmaplocal,
+								Function& function,
 								std::vector<ToIntCode::IntCode>& itc){
 
 		for(int i=0;i<itc.size();++i){
 			if(itc[i].opcode==LB_LOAD || 
-			   itc[i].opcode==LB_SAVE){
-				/* search in functions names */ 
-				mapfunctionit itfn=global_function_map.find(itc[i].name);
-				if(itfn!=global_function_map.end()){
-					itc[i].name=String::ToString((*itfn).second.id_var);
+			   itc[i].opcode==LB_SAVE){				  
+                
+				if(function.GetLineScopeGlobal(itc[i].name,itc[i].line,itc[i].column)){
+					/* search in global */
+					mapvariableit itglobal=global_variable_map.find(itc[i].name);				
+					if(itglobal!=global_variable_map.end()){
+						itc[i].name=String::ToString((*itglobal).second.id_var);
+						continue;
+					}	
+					/* search in functions names, if is a call */ 
+					mapfunctionit itfn=global_function_map.find(itc[i].name);
+					if(itfn!=global_function_map.end()){
+						itc[i].name=String::ToString((*itfn).second.id_var);
+						continue;
+					}
+					/* if not found */
+					++id_var_count;
+					Variable tmp;
+					tmp.id_var=id_var_count;
+					tmp.line=itc[i].line;
+					tmp.value=itc[i].name;	
+					tmp.is_string=itc[i].token==Tokenizer::STRING;					
+					global_variable_map.insert(mapvariableinsert(itc[i].name,tmp));
+					itc[i].name=String::ToString(tmp.id_var);
 					continue;
 				}
-				/* search in global */ 
-				mapvariableit itglobal=global_variable_map.find(itc[i].name);				
-				if(itglobal!=global_variable_map.end()){
-					itc[i].name=String::ToString((*itglobal).second.id_var);
-					continue;
-				}	
 				/* search in args */ 
-				mapvariableit itargs=varmapargs.find(itc[i].name);		
-				if(itargs!=varmapargs.end()){
+				mapvariableit itargs=function.args_map.find(itc[i].name);		
+				if(itargs!=function.args_map.end()){
 					itc[i].opcode= itc[i].opcode==LB_LOAD? LB_LOADARG : LB_SAVEARG;
 					itc[i].name=String::ToString((*itargs).second.id_var);
 					continue;
 				}
 				/* search in local */ 
-				mapvariableit itlocal=varmaplocal.find(itc[i].name);				
-				if(itlocal!=varmaplocal.end()){
+				mapvariableit itlocal=function.local_map.find(itc[i].name);				
+				if(itlocal!=function.local_map.end()){
 					itc[i].opcode= itc[i].opcode==LB_LOAD? LB_LOADLOCAL : LB_SAVELOCAL;
 					itc[i].name=String::ToString((*itlocal).second.id_var);
 					continue;
+				}
+				/* search in functions names, if is a call */ 
+				if(itc[i].info==TreeNode::IS_CALL||itc[i].name[0]=='$'){
+					mapfunctionit itfn=global_function_map.find(itc[i].name);
+					if(itfn!=global_function_map.end()){
+						itc[i].name=String::ToString((*itfn).second.id_var);
+						continue;
+					}
 				}
 				/* if not found */
 				Variable tmp;
@@ -220,8 +278,8 @@ protected:
 				tmp.value=itc[i].name;	
 				tmp.is_string=itc[i].token==Tokenizer::STRING;	
 				if(!tmp.is_string){
-					tmp.id_var=varmaplocal.size();
-					varmaplocal.insert(mapvariableinsert(itc[i].name,tmp));
+					tmp.id_var=function.local_map.size();
+					function.local_map.insert(mapvariableinsert(itc[i].name,tmp));
 					itc[i].name=String::ToString(tmp.id_var);
 					itc[i].opcode= itc[i].opcode==LB_LOAD ? LB_LOADLOCAL : LB_SAVELOCAL;
 				}

@@ -19,6 +19,8 @@ struct SemanticsChecking{
 	static TreeNode* ValidLessNameFunction(TreeNode* node);
 	/* BREAK AND CONTINUE MUST TO BE INTO do-while or while block  */
 	static TreeNode* ValidBreakContinue(TreeNode* node);
+	/* GLOBAL AND LOCAL MUST TO BE INTO def block  */
+	static TreeNode* ValidGlobalLocal(TreeNode* node);
 	/************/
 	static TreeNode* Controll(TreeNode* tree,ErrorParse &errors);
 

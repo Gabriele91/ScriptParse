@@ -102,35 +102,62 @@ TreeNode* SemanticsChecking::ValidBreakContinue(TreeNode* node){
 		}
 		return nodenotvalid;
 	}
+/* GLOBAL AND LOCAL MUST TO BE INTO def block  */
+TreeNode* SemanticsChecking::ValidGlobalLocal(TreeNode* node){
+		if((node->token==Tokenizer::LOCAL||
+		    node->token==Tokenizer::GLOBAL) &&
+			(!node->parent || 
+			 node->parent->token!=Tokenizer::DEF)){
+			return node;
+		}
+		//else go to leafs
+		TreeNode* nodenotvalid=NULL;
+		for(int i=0;i<node->Size() && nodenotvalid==NULL;++i){
+			nodenotvalid=ValidGlobalLocal((*node)[i]);
+		}
+		return nodenotvalid;
+	}
 /************/
 TreeNode* SemanticsChecking::Controll(TreeNode* tree,ErrorParse &errors){
 		TreeNode* errornode=NULL;
 		//find string exp error
 		if((errornode=ValidExpString(tree))){
 			errors.PushError(errornode->line,
-							ErrorParse::SYNTAX,
-						    "invalid exp string operator: "+errornode->name );
+							 errornode->column,
+							 ErrorParse::SYNTAX,
+						     "invalid exp string operator: "+errornode->name );
 				delete tree;
 				tree=NULL;
-			}else 
+		}else 
 		if((errornode=ValidReturn(tree))){
 			errors.PushError(errornode->line,
-							ErrorParse::SYNTAX,
-							"return must to be into a function");
+							 errornode->column,
+							 ErrorParse::SYNTAX,
+							 "return must to be into a function");
 				delete tree;
 				tree=NULL;
 		}else 
 		if((errornode=ValidBreakContinue(tree))){
 			errors.PushError(errornode->line,
+							 errornode->column,
 							 ErrorParse::SYNTAX,
-							"break/continue must to be into while/do-while statement");
+							 "break/continue must to be into while/do-while/for statement");
+			delete tree;
+			tree=NULL;
+		}else 
+		if((errornode=ValidGlobalLocal(tree))){
+			errors.PushError(errornode->line,
+							 errornode->column,
+							 ErrorParse::SYNTAX,
+							 "global/local must to be into def statement");
 			delete tree;
 			tree=NULL;
 		}else 
 		if((errornode=ValidLessNameFunction(tree))){
 			errors.PushError(errornode->line,
+							 errornode->column,
 							 ErrorParse::SYNTAX,
-							"invalid definition less name function");
+							 "invalid definition less name function");
 			delete tree;
 			tree=NULL;
 		}

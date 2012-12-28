@@ -18,7 +18,10 @@ struct ToIntCode{
 		bool valid;
 		short opcode;
 		int line;
+		int column;
+		int root_child_id;
 		Tokenizer::Token token;
+		TreeNode::AdditionalInfo info;
 		std::string name;
 	};
 	struct Function{
@@ -42,7 +45,8 @@ protected:
 
 	void GetFunctionAndReplaceWithVariabe(TreeNode* node);
 	void GenInitBitecode(std::vector<IntCode>& intCode,TreeNode* node,
-						 int& labelcount,int& labelcountif);	
+						 int& labelcount,
+						 int& labelcountif);	
 	/* Constant Folding + lite math optimizazione */
 	void MathOptimizazione(std::vector<IntCode>& intCode);
 	/*                                            */

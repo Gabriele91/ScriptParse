@@ -21,6 +21,8 @@ struct Tokenizer{
 		RETURN, // return(<exp>)
 		BREAK,    //break
 		CONTINUE, //continue
+		GLOBAL,   //global
+		LOCAL,    //local
 		//EXP
 	    ADD,    // +
 		MIN,    // -
@@ -55,14 +57,20 @@ struct Tokenizer{
 	Token GetToken();
 	Token GetNextToken();
 	int GetLine();
+	int GetColumn();
+	int GetLastLine();
+	int GetLastColumn();
 	void NextToken();
 	std::string TokenValue();
 	
 	private:
-
+	
 	const char *pointer;
+	const char *pointerline;
 	Token type;
 	int countline;
+	int old_countline;
+	int old_countcolumn;
 
 	/* VARIABLESSS */
 	bool IsNumber();
@@ -99,6 +107,8 @@ struct Tokenizer{
 	bool IsReturn();
 	bool IsBreak();
 	bool IsContinue();
+	bool IsGlobal();
+	bool IsLocal();
 	void SkipIf();
 	void SkipElif();
 	void SkipElse();
@@ -106,14 +116,17 @@ struct Tokenizer{
 	void SkipWhile();
 	void SkipDef();
 	void SkipFor();
-	void SkipReturn();;
+	void SkipReturn();
 	void SkipBreak();
+	void SkipGlobal();
+	void SkipLocal();
 	void SkipContinue();
 	
 
 	/* Skeep */
 	void SkipWhiteSpace();
 	void SkiepComments();
+	void DeterminateAndSkiepEndl();
 
 	/* Token parse */
 	void DeterminateToken();

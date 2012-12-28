@@ -1,10 +1,12 @@
 #include "ErrorParse.h"
 
 void ErrorParse::PushError(unsigned int line,
+						   unsigned int column,
 						   unsigned char errorType, 
 						   const std::string& addictioninfo){
 		Error error;
 		error.line=line;
+		error.column=column;
 		error.error=errorType;
 		error.addictioninfo=addictioninfo;
 		errors.push_back(error);
@@ -15,6 +17,7 @@ std::string ErrorParse::ToString(){
 	for(int i=0;i<errors.size();++i){
 		out+="error:"
 			 +String::ToString(errors[i].line)+":"
+			 +String::ToString(errors[i].column)+":"
 			 +ErrorString[errors[i].error]
 		     +(errors[i].addictioninfo.length()? std::string(", ")+errors[i].addictioninfo:"")
 			 +"\n";
@@ -43,6 +46,8 @@ const char *ErrorParse::ErrorString[]={
                 "'return' parse error", //RETURN,
                 "'break' parse error", //BREAK,
                 "'continue' parse error", //CONTINUE,
+                "'global' parse error", //GLOBAL,
+                "'local' parse error", //LOCAL,
 				
                 "'==' parse error",//EQ,
                 "'!=' parse error",//NOTEQ,

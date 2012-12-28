@@ -44,9 +44,12 @@ void ToIntCode::ParseTree(TreeNode* node){
 		MathOptimizazione(intCode);
 		//for all function
 		for(int f=0;f<functions.size();++f){
+			bool tmp_islocal=true;
 			//for all statements in function
 			for(int i=1;i<functions[f].root->Size();++i){
-				GenInitBitecode(functions[f].intCode,(*functions[f].root)[i],tmp_label,tmp_label_if);
+				if((*functions[f].root)[i]->token!=Tokenizer::GLOBAL &&
+				   (*functions[f].root)[i]->token!=Tokenizer::LOCAL    )//jmp local and global token
+					GenInitBitecode(functions[f].intCode,(*functions[f].root)[i],tmp_label,tmp_label_if);
 			}
 			//Optimization
 			MathOptimizazione(functions[f].intCode);
@@ -59,9 +62,10 @@ void ToIntCode::GetFunctionAndReplaceWithVariabe(TreeNode* node){
 			
 			/* create function */
 			Function function;
-			function.name="$Function_"+String::ToString(functions.size());
 
 			if(node->childs[0]->info==TreeNode::IS_LESSNAME_HEADER){
+				//Anonymous function
+				function.name="$Function_"+String::ToString(functions.size());
 				//if is   <variable> = <function>
 				//replace <variable> = $<variable>
 				if(node->parent->token==Tokenizer::ASSIGNAMENT){
@@ -72,7 +76,7 @@ void ToIntCode::GetFunctionAndReplaceWithVariabe(TreeNode* node){
 					* <variable>     $<variable>
 					*/
 					(*node->parent)[1]=
-						new TreeNode(node->line,Tokenizer::VARIABLE,function.name);
+						new TreeNode(node->line,node->column,Tokenizer::VARIABLE,function.name);
 				}
 				//if is <variable> = <function><less name call>
 				else{
@@ -92,30 +96,62 @@ void ToIntCode::GetFunctionAndReplaceWithVariabe(TreeNode* node){
 					node->parent->info=TreeNode::IS_CALL;
 				}
 			}
-			else{					
+			else{	
+				//search def/root
+				TreeNode *p=NULL;
+				for(p=node->parent;p!=NULL;p=p->parent){
+					if(p->token==Tokenizer::DEF){
+						break;
+					}
+				}
+				//
+				if(p!=NULL){
 				/***
-				*        <root>
+				* def function in function
+				*
+				*        <def>
 				*          |   
 				*          |    
 				*        <def>
 				to				
-				*         <root>
-				*            |   
-				*            |    
+				*         <no root>
+				*             |   
+				*             |    
 				*            <=>
 				*           /   \
 				*          /     \
 				* <variable>     $<variable>
-				*/	
-				//get name         /* header *//* name */
+				*/
+				//get name                 //header // name 
+				//Anonymous function
+				function.name="$Function_"+String::ToString(functions.size());
+				//if is   <variable> = <function>
 				std::string namefunctionvar=node->childs[0]->name;
 				int index=node->parent->IndexChild(node);
 				node->parent->childs[index]=
-					  new TreeNode(node->line,Tokenizer::ASSIGNAMENT,"");
+					  new TreeNode(node->line,node->column,Tokenizer::ASSIGNAMENT,"");
 				node->parent->childs[index]->PushChild(
-					  new TreeNode(node->line,Tokenizer::VARIABLE,namefunctionvar));
+					  new TreeNode(node->line,node->column,Tokenizer::VARIABLE,namefunctionvar));
 				node->parent->childs[index]->PushChild(
-					  new TreeNode(node->line,Tokenizer::VARIABLE,function.name));
+					  new TreeNode(node->line,node->column,Tokenizer::VARIABLE,function.name));
+				}
+				else{
+
+					/***
+					*        <root>
+					*          |   
+					*          |    
+					*        <def>
+					to	
+					*        <root>
+					*/
+
+					//name function in first child node
+					function.name=node->childs[0]->name;
+					//dt node
+					node->parent->RemoveChild(node);
+				}
+
 			}
 			//
 			function.root=node;
@@ -124,7 +160,12 @@ void ToIntCode::GetFunctionAndReplaceWithVariabe(TreeNode* node){
 			/* create function */
 		}	
 		//else go to leafs
-		for(int i=0;i<node->Size();++i) GetFunctionAndReplaceWithVariabe((*node)[i]);	
+		int size_vc=node->Size();
+		for(int i=0;i<size_vc;++i) {
+			GetFunctionAndReplaceWithVariabe((*node)[i]);
+			//if delete, redo....
+			if(size_vc!=node->Size()){ --i; size_vc=node->Size(); }
+		}
 	}
 void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 								TreeNode* node,
@@ -134,8 +175,11 @@ void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 		IntCode tmp;
 		tmp.token=node->token;
 		tmp.line=node->line;
+		tmp.column=node->column;
+		//unused tmp.root_child_id=node->root_child_id;
 		tmp.valid=true;
 		tmp.label=false;
+		tmp.info=node->info;
 		
 		int tmp_line;
 		int tmp2_line;
@@ -158,18 +202,25 @@ void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 			tmp.isconst=false;
 			intCode.push_back(tmp);
 			if(node->info==TreeNode::IS_CALL){
+				//first arg is function (repush, for recall)
+				intCode.push_back(tmp);
 				//push args
 				for(int i=0;i<node->Size();++i){
 					GenInitBitecode(intCode,(*node)[i],labelcount,labelcountif);
 				}
 				//push call
 				tmp.opcode=LB_CALL;
-				tmp.name=String::ToString(node->Size());
+				tmp.name=String::ToString(node->Size()+1);
 				tmp.isconst=false;
 				intCode.push_back(tmp);
-				//if a parent is no a def or root:
-				if(node->parent->token!=Tokenizer::DEF 
-					&& 
+				//if a parent is no a def|if[elif|else]|for|do|while or root:
+				if(node->parent->token!=Tokenizer::DEF &&
+				   node->parent->token!=Tokenizer::FOR && 
+				   node->parent->token!=Tokenizer::IF && 
+				   node->parent->token!=Tokenizer::ELIF &&
+				   node->parent->token!=Tokenizer::ELSE && 
+				   node->parent->token!=Tokenizer::DO && 
+				   node->parent->token!=Tokenizer::WHILE && 
 				   node->parent->parent){
 				   tmp.token=node->token;
 				   tmp.line=node->line;

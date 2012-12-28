@@ -5,9 +5,9 @@
 	#define ISTOKEN(X) (tkn.GetToken()==Tokenizer::X)
 	#define NOTNEXTTOKEN(X) (tkn.GetNextToken()!=Tokenizer::X)
 	#define ISNEXTTOKEN(X) (tkn.GetNextToken()==Tokenizer::X)
-	#define ERROR_(X) errors->PushError(tkn.GetLine(),ErrorParse::X,"")
-	#define ERROR_I(X,I) errors->PushError(tkn.GetLine(),ErrorParse::X,I)
-	#define ERROR_L(X,I,L) errors->PushError(L,ErrorParse::X,I)
+	#define ERROR_(X) errors->PushError(tkn.GetLine(),tkn.GetColumn(),ErrorParse::X,"")
+	#define ERROR_I(X,I) errors->PushError(tkn.GetLine(),tkn.GetColumn(),ErrorParse::X,I)
+	#define ERROR_L(X,I,L,C) errors->PushError(L,C,ErrorParse::X,I)
 	#define IFTREETKIS(X,Y) X->token==Tokenizer::Y
 
 	TreeNode* SyntaxTree::ParserFactor(){
@@ -28,6 +28,7 @@
 		TreeNode *newnode=NULL;
 		if(ISTOKEN(MIN) || tkn.GetToken()==Tokenizer::NOT){
 			newnode=new TreeNode(tkn.GetLine(),
+	                             tkn.GetColumn(),
 							     tkn.GetToken(),
 							     tkn.TokenValue());	
 			tkn.NextToken();	
@@ -43,6 +44,7 @@
 		   }
 		   else{ //is a value
 			   node=new TreeNode(tkn.GetLine(),
+	                             tkn.GetColumn(),
 								 tkn.GetToken(),
 								 tkn.TokenValue());			
 			   tkn.NextToken();
@@ -101,16 +103,20 @@
 			  if(tree) left=tree;  
 			  /* set tree */
 			  tree= new TreeNode(tkn.GetLine(),
+							     tkn.GetColumn(),
 								 tkn.GetToken(),
 								 tkn.TokenValue());
-
+			  //debug
+			  int dLine=tkn.GetLine();
+			  int dColumn=tkn.GetColumn();
+			  //
 			  tkn.NextToken();
 			  //<Factor>
 			  if(NOT(right=ParserFactor())){ 
 				   if(IFTREETKIS(tree,MUL))
-						ERROR_I(MUL,"invalid right factor");
+						ERROR_I(MUL,"invalid right factor",dLine,dColumn);
 				   if(IFTREETKIS(tree,DIV))
-						ERROR_I(DIV,"invalid right factor");
+						ERROR_I(DIV,"invalid right factor",dLine,dColumn);
 					delete left;
 					delete tree;
 					return NULL;
@@ -133,16 +139,20 @@
 				if(tree) left=tree;
 				/* make tree */
 				tree= new TreeNode(tkn.GetLine(),
+							       tkn.GetColumn(),
 								   tkn.GetToken(),
-								    tkn.TokenValue());
-
+								   tkn.TokenValue());
+				//debug
+				int dLine=tkn.GetLine();
+				int dColumn=tkn.GetColumn();
+				//
 				tkn.NextToken();
 				//<term>
 				if(NOT(right=ParseTerm())){ 	
 				   if(IFTREETKIS(tree,ADD))
-						ERROR_I(ADD,"invalid right factor");
+						ERROR_L(ADD,"invalid right factor",dLine,dColumn);
 				   if(IFTREETKIS(tree,MIN))
-						ERROR_I(MIN,"invalid right factor");			
+						ERROR_L(MIN,"invalid right factor",dLine,dColumn);			
 					delete left;
 					delete tree;
 					return NULL;
@@ -169,22 +179,27 @@
 				if(tree) left=tree;
 				/* make tree */
 				tree= new TreeNode(tkn.GetLine(),
+							       tkn.GetColumn(),
 								   tkn.GetToken(),
-								    tkn.TokenValue());
-
+								   tkn.TokenValue());
+				
+			    //debug
+			    int dLine=tkn.GetLine();
+			    int dColumn=tkn.GetColumn();
+			    //
 				tkn.NextToken();
 				//<base>
 				if(NOT(right=ParseBase())){  	
 				   if(IFTREETKIS(tree,EQ))
-						ERROR_I(EQ,"invalid right factor");
+						ERROR_I(EQ,"invalid right factor",dLine,dColumn);
 				   if(IFTREETKIS(tree,GT))
-						ERROR_I(LT,"invalid right factor");	  	
+						ERROR_I(LT,"invalid right factor",dLine,dColumn);	  	
 				   if(IFTREETKIS(tree,LT))
-						ERROR_I(GT,"invalid right factor");
+						ERROR_I(GT,"invalid right factor",dLine,dColumn);
 				   if(IFTREETKIS(tree,GT))
-						ERROR_I(LTE,"invalid right factor");	  	
+						ERROR_I(LTE,"invalid right factor",dLine,dColumn);	  	
 				   if(IFTREETKIS(tree,EQ))
-						ERROR_I(GTE,"invalid right factor");				
+						ERROR_I(GTE,"invalid right factor",dLine,dColumn);				
 					delete left;
 					delete tree;
 					return NULL;
@@ -207,6 +222,7 @@
 				if(tree) left=tree;
 				/* make tree */
 				tree= new TreeNode(tkn.GetLine(),
+							       tkn.GetColumn(),
 								   tkn.GetToken(),
 								   tkn.TokenValue());
 
@@ -230,6 +246,7 @@
 	TreeNode* SyntaxTree::ParseIf(){	
 		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
 			//LPR '(' ?
@@ -274,6 +291,7 @@
 			/* make else tree */
 			TreeNode *leaf=NULL;
 			TreeNode *tree= new TreeNode(tkn.GetLine(),
+							             tkn.GetColumn(),
 										 tkn.GetToken(),
 									     tkn.TokenValue());			
 			//LPR '(' ?
@@ -304,6 +322,7 @@
 			/* make else tree */
 			TreeNode *leaf=NULL;
 			TreeNode *tree= new TreeNode(tkn.GetLine(),
+							             tkn.GetColumn(),
 										 tkn.GetToken(),
 									     tkn.TokenValue());			
 			//LS '{' ?
@@ -325,6 +344,7 @@
 	TreeNode* SyntaxTree::ParseWhile(){
 		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
 		//LPR '(' ?
@@ -354,6 +374,7 @@
 	TreeNode* SyntaxTree::ParseDo(){
 		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
 		//LS '{' ?
@@ -387,25 +408,30 @@
 	TreeNode* SyntaxTree::ParseFor(){
 		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
 		/**** PARSE FOR HEADER ****/
 		/*    make header for     */
 		TreeNode *for_header= new TreeNode(tkn.GetLine(),
+							               tkn.GetColumn(),
 										   Tokenizer::NONE,
 									       "",
 										   TreeNode::IS_FOR_HEADER);
 		tree->PushChild(for_header);
 
 		TreeNode *for_left= new TreeNode(tkn.GetLine(),
+							             tkn.GetColumn(),
 										   Tokenizer::NONE,
 									       "",
 										   TreeNode::IS_TOKEN);
 		TreeNode *for_center= new TreeNode(tkn.GetLine(),
+							               tkn.GetColumn(),
 										   Tokenizer::NONE,
 									       "",
 										   TreeNode::IS_TOKEN);
 		TreeNode *for_right= new TreeNode(tkn.GetLine(),
+							              tkn.GetColumn(),
 										   Tokenizer::NONE,
 									       "",
 										   TreeNode::IS_TOKEN);
@@ -457,18 +483,57 @@
 		return tree; 
 	}
 	TreeNode* SyntaxTree::ParseBreak(){
-		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
 		tkn.NextToken();
 		return tree;
 	}
 	TreeNode* SyntaxTree::ParseContinue(){	
-		TreeNode *leaf=NULL;
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
+		tkn.NextToken();
+		return tree;
+	}
+	
+	TreeNode* SyntaxTree::ParseGlobal(){
+		//<global>
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		//<variable>		
+		//LPR <VARIABLE> ?
+		tkn.NextToken();
+		if(NOTTOKEN(VARIABLE)){ ERROR_(VARIABLE); delete tree; return NULL; }
+		TreeNode *leaf= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		tree->PushChild(leaf);
+		//next
+		tkn.NextToken();
+		return tree;
+	}
+	TreeNode* SyntaxTree::ParseLocal(){
+		//<local>
+		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		//<variable>		
+		//LPR <VARIABLE> ?
+		tkn.NextToken();
+		if(NOTTOKEN(VARIABLE)){ ERROR_(VARIABLE); delete tree; return NULL; }
+		TreeNode *leaf= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
+									 tkn.GetToken(),
+									 tkn.TokenValue());
+		tree->PushChild(leaf);
+		//next
 		tkn.NextToken();
 		return tree;
 	}
@@ -476,15 +541,24 @@
 	TreeNode* SyntaxTree::ParseAssignament(){	
 		//<variable>
 		TreeNode *left=new TreeNode(tkn.GetLine(),
+							        tkn.GetColumn(),
 									tkn.GetToken(),
 									tkn.TokenValue());
 		// '='
 		tkn.NextToken();
-		if(NOTTOKEN(ASSIGNAMENT)){ delete left; return NULL; }
+		if(NOTTOKEN(ASSIGNAMENT)){ 
+			ERROR_I(ASSIGNAMENT,"invalid not found '='");
+			delete left;
+			return NULL;
+		}
 		TreeNode *tree= new TreeNode(tkn.GetLine(),
+							         tkn.GetColumn(),
 									 tkn.GetToken(),
 									 tkn.TokenValue());
-
+		//debug
+		int dLine=tkn.GetLine();
+		int dColumn=tkn.GetColumn();
+		//
 		//add <variable>
 		tree->PushChild(left);
 
@@ -492,7 +566,7 @@
 		TreeNode *right=NULL;
 		tkn.NextToken();
 		if(NOT(right=ParseExp())){ 
-			ERROR_I(ASSIGNAMENT,"invalid right expression"); 
+			ERROR_L(EXP,"invalid right expression",dLine,dColumn);
 			delete tree; 
 			return NULL; 
 		}
@@ -518,6 +592,7 @@
 		TreeNode *leaf=NULL; //tmp node
 		//<def>
 		TreeNode *tree=new TreeNode(tkn.GetLine(),
+							        tkn.GetColumn(),
 									tkn.GetToken(),
 									tkn.TokenValue());
 		//find <variable>
@@ -541,6 +616,7 @@
 			if(ISTOKEN(VARIABLE)){
 				//push first arg
 				headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+							                           tkn.GetColumn(),
 													   tkn.GetToken(),
 													   tkn.TokenValue()));
 				// ','
@@ -555,6 +631,7 @@
 					}	
 					//push arg
 					headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+							                               tkn.GetColumn(),
 														   tkn.GetToken(),
 														   tkn.TokenValue()));	
 					// ','
@@ -593,6 +670,7 @@
 		TreeNode *leaf=NULL;
 		//<variable>
 		TreeNode *tree=new TreeNode(tkn.GetLine(),
+							        tkn.GetColumn(),
 									tkn.GetToken(),
 									tkn.TokenValue(),
 									TreeNode::IS_CALL);
@@ -636,6 +714,7 @@
 		TreeNode *leaf=NULL; //tmp node
 		//<def>
 		TreeNode *tree=new TreeNode(tkn.GetLine(),
+							        tkn.GetColumn(),
 									tkn.GetToken(),
 									tkn.TokenValue());
 
@@ -653,6 +732,7 @@
 			if(ISTOKEN(VARIABLE)){
 				//push first arg
 				headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+							                           tkn.GetColumn(),
 													   tkn.GetToken(),
 													   tkn.TokenValue()));
 				// ','
@@ -667,6 +747,7 @@
 					}	
 					//push arg
 					headerFunction->PushChild(new TreeNode(tkn.GetLine(),
+							                               tkn.GetColumn(),
 														   tkn.GetToken(),
 														   tkn.TokenValue()));
 					// ','
@@ -705,6 +786,7 @@
 		TreeNode *leaf=NULL;
 		//<NONE>
 		TreeNode *tree=new TreeNode(tkn.GetLine(),
+							        tkn.GetColumn(),
 									Tokenizer::VARIABLE,
 									tkn.TokenValue(),
 									TreeNode::IS_LESSNAME_CALL);
@@ -758,6 +840,7 @@
 		TreeNode *leaf=NULL;
 		//node return
 		TreeNode *tree=new TreeNode(tkn.GetLine(),
+							        tkn.GetColumn(),
 									tkn.GetToken(),
 									tkn.TokenValue());
 		//LPR '(' ?
@@ -778,63 +861,74 @@
 
 		TreeNode* tmp=NULL;
 		int lineCode=tkn.GetLine();
+		int lineColumn=tkn.GetColumn();
 
 		switch (tkn.GetToken())
 		{
 		case Tokenizer::IF:
 			tmp=ParseIf();
-			if(NOT(tmp)) ERROR_L(IF,"invalid",lineCode);
+			if(NOT(tmp)) ERROR_L(IF,"invalid",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::WHILE:
 			tmp=ParseWhile();
-			if(NOT(tmp)) ERROR_L(WHILE,"invalid definiction loop (while)",lineCode);
+			if(NOT(tmp)) ERROR_L(WHILE,"invalid definiction loop (while)",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::DO:
 			tmp=ParseDo();
-			if(NOT(tmp)) ERROR_L(DO,"invalid definiction loop (do-while)",lineCode);
+			if(NOT(tmp)) ERROR_L(DO,"invalid definiction loop (do-while)",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::FOR:
 			tmp=ParseFor();
-			if(NOT(tmp)) ERROR_L(FOR,"invalid definiction loop (for) ",lineCode);
+			if(NOT(tmp)) ERROR_L(FOR,"invalid definiction loop (for) ",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::DEF:
 			tmp=ParseDef();
-			if(NOT(tmp)) ERROR_L(DEF,"invalid definiction function",lineCode);
+			if(NOT(tmp)) ERROR_L(DEF,"invalid definiction function",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::RETURN: 
 			tmp=ParseReturn();
-			if(NOT(tmp)) ERROR_L(RETURN,"invalid return",lineCode);
+			if(NOT(tmp)) ERROR_L(RETURN,"invalid return",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::BREAK: 
 			tmp=ParseBreak();
-			if(NOT(tmp)) ERROR_L(RETURN,"invalid break",lineCode);
+			if(NOT(tmp)) ERROR_L(BREAK,"invalid break",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::CONTINUE: 
 			tmp=ParseContinue();
-			if(NOT(tmp)) ERROR_L(RETURN,"invalid continue",lineCode);
+			if(NOT(tmp)) ERROR_L(CONTINUE,"invalid continue",lineCode,lineColumn);
+			return tmp; 
+		break;
+		case Tokenizer::GLOBAL: 
+			tmp=ParseGlobal();
+			if(NOT(tmp)) ERROR_L(GLOBAL,"invalid global",lineCode,lineColumn);
+			return tmp; 
+		break;
+		case Tokenizer::LOCAL: 
+			tmp=ParseLocal();
+			if(NOT(tmp)) ERROR_L(LOCAL,"invalid local",lineCode,lineColumn);
 			return tmp; 
 		break;
 		case Tokenizer::VARIABLE: //assignament or call
 			if(ISNEXTTOKEN(ASSIGNAMENT)){//assignament 
 				tmp=ParseAssignament();
-				if(NOT(tmp)) ERROR_L(VARIABLE,"invalid assignament",lineCode);
+				if(NOT(tmp)) ERROR_L(VARIABLE,"invalid assignament",lineCode,lineColumn);
 				return tmp; 
 			}
 			else{//call
 				tmp=ParseCall();
-				if(NOT(tmp)) ERROR_L(VARIABLE,"invalid call function",lineCode);
+				if(NOT(tmp)) ERROR_L(VARIABLE,"invalid call function",lineCode,lineColumn);
 				return tmp; 
 			}
 		break;
 		default:
-			 ERROR_L(STATEMENT,"indeterminate statement",lineCode);
+			 ERROR_L(STATEMENT,"indeterminate statement",lineCode,lineColumn);
 			 return NULL; 
 		break;
 		}

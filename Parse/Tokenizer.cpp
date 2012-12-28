@@ -2,6 +2,9 @@
 
 	void Tokenizer::SetScript(const char *pointer){
 		this->pointer=pointer;
+		this->pointerline=pointer-1;
+		this->old_countline=0;
+	    this->old_countcolumn=0;
 		countline=0;
 	}
 	void Tokenizer::Start(){
@@ -14,6 +17,7 @@
 	Tokenizer::Token Tokenizer::GetNextToken(){
 		//save current state
 		const char *tpointer=pointer;
+		const char *tpointerline=pointerline;
 		Token ttype=type;
 		//get next token
 		SkipToken();
@@ -22,6 +26,7 @@
 		Token rtoken=type;
 		//resume state		
 		pointer=tpointer;
+		pointerline=tpointerline;
 		type=ttype;
 		//return next state
 		return rtoken;
@@ -29,7 +34,18 @@
 	int Tokenizer::GetLine(){
 		return countline;
 	}
+	int Tokenizer::GetColumn(){
+		return pointer-pointerline;
+	}
+	int Tokenizer::GetLastLine(){
+		return old_countline;
+	}
+	int Tokenizer::GetLastColumn(){
+		return old_countcolumn;
+	}
 	void Tokenizer::NextToken(){	
+		old_countline=GetLine();
+		old_countcolumn=GetColumn();
 		SkipToken();
 		DeterminateToken();
 	}
@@ -66,6 +82,12 @@
 			break;		
 		case Tokenizer::CONTINUE:
 			return "continue";
+			break;		
+		case Tokenizer::GLOBAL:
+			return "global";
+			break;		
+		case Tokenizer::LOCAL:
+			return "local";
 			break;		
 		case Tokenizer::VARIABLE:		
 			/* parse variable */
@@ -368,6 +390,21 @@
 			   (*(pointer+5)=='n') && 
 			   (*(pointer+6)=='u') && 
 			   (*(pointer+7)=='e');		
+	}
+	bool Tokenizer::IsGlobal(){
+		return (*pointer=='g') && 
+			   (*(pointer+1)=='l') && 
+			   (*(pointer+2)=='o') && 
+			   (*(pointer+3)=='b') && 
+			   (*(pointer+4)=='a') && 
+			   (*(pointer+5)=='l');		
+	}
+	bool Tokenizer::IsLocal(){
+		return (*pointer=='l') && 
+			   (*(pointer+1)=='o') && 
+			   (*(pointer+2)=='c') && 
+			   (*(pointer+3)=='a') && 
+			   (*(pointer+4)=='l');
 	}	
 	void Tokenizer::SkipIf(){
 		pointer+=2;
@@ -398,31 +435,47 @@
 	}
 	void Tokenizer::SkipContinue(){
 		pointer+=8;
+	}	
+	void Tokenizer::SkipGlobal(){
+		pointer+=6;
+	}
+	void Tokenizer::SkipLocal(){
+		pointer+=5;	
 	}
 	
 
 	/* Skeep */
+	void  Tokenizer::DeterminateAndSkiepEndl(){	
+			  if((*pointer)=='\r'){ 
+				++countline; 
+				pointer+=(*(pointer+1)=='\n'); 
+				pointerline=pointer;
+			  }else 
+			   if((*pointer)=='\n'){
+					  ++countline; 
+					  pointerline=pointer;
+			   }
+	}
 	void Tokenizer::SkiepComments(){
 		//c++ style comments		
 		bool inCPPcomment=(*pointer)=='/'&&(*(pointer+1))=='/';
 		while(inCPPcomment && (*pointer)!='\0'&&(*pointer)!='\n'){
-			++pointer;			  
-			/* count line */
-			if((*pointer)=='\r'){ 
-				++countline; 
-				pointer+=(*(pointer+1)=='\n'); 
-			}else countline+=((*pointer)=='\n');			  
+			++pointer;		  
+			/* count/skeip window new line */	
+			DeterminateAndSkiepEndl();			  
 			/* count line */
 			//cout line and jump if find '\\n' || \\r\n || \\r 
 			if((*pointer)=='\\'){
 				if((*(pointer+1))=='\r'){ 
 					++countline; 
 					pointer+=2;
-					pointer+=(*(pointer+2)=='\n'); 
+					pointer+=(*(pointer+2)=='\n'); 					
+					pointerline=pointer;
 				}
 				else if((*(pointer+1))=='\n') {
 					++countline;
-					pointer+=2;
+					pointer+=2; 					
+					pointerline=pointer;
 				}
 			}
 		}
@@ -430,11 +483,8 @@
 		bool inCcomment=(*pointer)=='/'&&(*(pointer+1))=='*';
 		while(inCcomment && (*pointer)!='\0'){
 				 ++pointer;			  
-				 /* count line */
-				 if((*pointer)=='\r'){ 
-					++countline; 
-					pointer+=(*(pointer+1)=='\n'); 
-				 }else countline+=((*pointer)=='\n');			  
+				 /* count/skeip window new line */	
+				 DeterminateAndSkiepEndl();		  
 				 /* count line */
 				 //if found */, exit!
 				 if((*pointer)=='*'&&(*(pointer+1))=='/'){
@@ -448,14 +498,11 @@
 		SkiepComments();
 		//skeep space
 		while((*pointer)==' ' || (*pointer)=='\t'||
-			  (*pointer)=='\r'|| (*pointer)=='\n'){
-			  
-			  /* count line */
-			  if((*pointer)=='\r'){ 
-				++countline; 
-				pointer+=(*(pointer+1)=='\n'); 
-			  }else countline+=((*pointer)=='\n');			  
-			  /* count line */
+			  (*pointer)=='\r'|| (*pointer)=='\n'){			  
+			  /* count/skeip window new line */	
+			  DeterminateAndSkiepEndl();
+			  /* count line */			  
+			  /* skeep unix/mac line */	
 			  ++pointer;
 			  //skeep comments
 			  SkiepComments();
@@ -477,6 +524,8 @@
 		if(IsReturn())		type=RETURN; else
 		if(IsBreak())		type=BREAK; else
 		if(IsContinue())	type=CONTINUE; else
+		if(IsLocal())		type=LOCAL; else
+		if(IsGlobal())		type=GLOBAL; else
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */
 		if(IsVariable())    type=VARIABLE; else 
 		if(IsNumber())		type=NUMBER; else 
@@ -521,6 +570,8 @@
 		if(type==RETURN)   SkipReturn(); else
 		if(type==BREAK)    SkipBreak(); else
 		if(type==CONTINUE) SkipContinue(); else
+		if(type==LOCAL)		SkipLocal(); else
+		if(type==GLOBAL)	SkipGlobal(); else
 		/* IMPORTANT: KEYWORDs SEARCHs BEFORE VARIABLEs */		
 		if(type==VARIABLE) SkipVariable(); else
 		if(type==NUMBER) SkipNumber(); else
