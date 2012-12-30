@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="File di origine">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="File di intestazione">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="File di risorse">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="File di intestazione\Parse">
+      <UniqueIdentifier>{21ad71a4-6fb2-4af7-b947-3f55f287ba66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di origine\Parse">
+      <UniqueIdentifier>{c9ed9637-95a9-47ae-ad19-262c96bf1cd3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="VMCpp.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="LbVariable.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="LbError.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="LbFunction.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="LbType.h">
+      <Filter>File di intestazione</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\ErrorParse.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\IntCode.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\ParseTree.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\SemanticsChecking.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\SyntaxTree.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\Tokenizer.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\TreeNode.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="UtilityString.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse\GenByteCode.cpp">
+      <Filter>File di origine\Parse</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="VMCpp.h">
+      <Filter>File di origine</Filter>
+    </ClInclude>
+    <ClInclude Include="LbBytecode.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="LbError.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="LbFunction.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="LbVariable.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\ErrorParse.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\GenByteCode.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\IntCode.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\Map.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\ParseTree.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\SemanticsChecking.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\SyntaxTree.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\Table.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\Tokenizer.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse\TreeNode.h">
+      <Filter>File di intestazione\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="UtilityString.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.pl">
+      <Filter>File di risorse</Filter>
+    </None>
+  </ItemGroup>
+</Project>

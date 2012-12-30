@@ -1,24 +1,27 @@
 #ifndef LBTYPE_H
 #define LBTYPE_H
+#include "UtilityString.h"
+#include <vector>
+#include <string>
+#include <sstream>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <malloc.h>
-#include <string.h>
-//bool
-#ifndef __cplusplus
-    #ifndef bool
-        typedef unsigned char bool;
-        #define false '\0'
-        #define true 1
-    #endif
-#endif
-
-
+////Class declaretion
+class LbVM;
+class LbVariable;
+class LbError;
+class LbFunction;
+class LbFunctionContext;
+struct LbLineCommands;
+////
+////type definiction
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
+typedef std::string  cppstring;
+typedef int (*LbCfunction) (LbVM*);
+typedef void (*LbFnCommands) (LbVM*);
+
+////type float
 #ifdef LITEB_FLOAT
 	typedef float LbFloat;
 	#define LB_FLOAT_PRINT "%.6g"
@@ -26,14 +29,17 @@ typedef unsigned int uint;
 	typedef double LbFloat;
 	#define LB_FLOAT_PRINT "%.6g"
 #endif
-	
-////Struct declaretion
-struct VMliteB;
-typedef struct VMliteB VMliteB;
-////
-////
-struct LbLineCommands;
-typedef struct LbLineCommands LbLineCommands;
-////
+//define stack size
+#ifndef VMB_SIZE_STACK
+	#define VMB_SIZE_STACK 1024
+#endif
+#ifndef VMB_SIZE_CONTEXT
+	#define VMB_SIZE_CONTEXT 1024
+#endif
+
+#define DINLINE __inline
+#define DFORCEINLINE __forceinline
+
+
 
 #endif

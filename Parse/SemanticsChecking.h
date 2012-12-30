@@ -1,7 +1,6 @@
 #ifndef SEMANTICSCHECKING_H
 #define SEMANTICSCHECKING_H
 
-#include "UtilityString.h"
 #include "Table.h"
 #include "SyntaxTree.h"
 

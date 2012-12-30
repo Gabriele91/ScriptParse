@@ -1,12 +1,12 @@
 #ifndef INTCODE_H
 #define INTCODE_H
 
+#include "../VMCpp.h"
+#include "../UtilityString.h"
 #include <vector>
-#include "UtilityString.h"
 #include "Table.h"
 #include "SyntaxTree.h"
 #include "ParseTree.h"
-#include "../VMliteB.h"
 
 
 struct ToIntCode{

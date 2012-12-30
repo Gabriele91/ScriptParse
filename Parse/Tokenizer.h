@@ -1,7 +1,6 @@
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
-
-#include "UtilityString.h"
+#include <string>
 
 struct Tokenizer{
 

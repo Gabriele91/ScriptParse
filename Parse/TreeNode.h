@@ -1,7 +1,5 @@
 #ifndef TREE_NODE_H
 #define TREE_NODE_H
-
-#include "UtilityString.h"
 #include "Tokenizer.h"
 #include <vector>
 

@@ -114,9 +114,9 @@
 			  //<Factor>
 			  if(NOT(right=ParserFactor())){ 
 				   if(IFTREETKIS(tree,MUL))
-						ERROR_I(MUL,"invalid right factor",dLine,dColumn);
+						ERROR_L(MUL,"invalid right factor",dLine,dColumn);
 				   if(IFTREETKIS(tree,DIV))
-						ERROR_I(DIV,"invalid right factor",dLine,dColumn);
+						ERROR_L(DIV,"invalid right factor",dLine,dColumn);
 					delete left;
 					delete tree;
 					return NULL;
@@ -191,15 +191,15 @@
 				//<base>
 				if(NOT(right=ParseBase())){  	
 				   if(IFTREETKIS(tree,EQ))
-						ERROR_I(EQ,"invalid right factor",dLine,dColumn);
+						ERROR_L(EQ,"invalid right factor",dLine,dColumn);
 				   if(IFTREETKIS(tree,GT))
-						ERROR_I(LT,"invalid right factor",dLine,dColumn);	  	
+						ERROR_L(LT,"invalid right factor",dLine,dColumn);	  	
 				   if(IFTREETKIS(tree,LT))
-						ERROR_I(GT,"invalid right factor",dLine,dColumn);
+						ERROR_L(GT,"invalid right factor",dLine,dColumn);
 				   if(IFTREETKIS(tree,GT))
-						ERROR_I(LTE,"invalid right factor",dLine,dColumn);	  	
+						ERROR_L(LTE,"invalid right factor",dLine,dColumn);	  	
 				   if(IFTREETKIS(tree,EQ))
-						ERROR_I(GTE,"invalid right factor",dLine,dColumn);				
+						ERROR_L(GTE,"invalid right factor",dLine,dColumn);				
 					delete left;
 					delete tree;
 					return NULL;
@@ -506,16 +506,19 @@
 									 tkn.GetToken(),
 									 tkn.TokenValue());
 		//<variable>		
-		//LPR <VARIABLE> ?
+		//LPR <VARIABLE> {,<VARIABLE>} ? 
+		do{
 		tkn.NextToken();
 		if(NOTTOKEN(VARIABLE)){ ERROR_(VARIABLE); delete tree; return NULL; }
 		TreeNode *leaf= new TreeNode(tkn.GetLine(),
 							         tkn.GetColumn(),
 									 tkn.GetToken(),
-									 tkn.TokenValue());
+									 tkn.TokenValue());		
 		tree->PushChild(leaf);
 		//next
 		tkn.NextToken();
+		}while(ISTOKEN(COMMA));
+
 		return tree;
 	}
 	TreeNode* SyntaxTree::ParseLocal(){
@@ -525,16 +528,19 @@
 									 tkn.GetToken(),
 									 tkn.TokenValue());
 		//<variable>		
-		//LPR <VARIABLE> ?
+		//LPR <VARIABLE> {,<VARIABLE>} ? 
+		do{
 		tkn.NextToken();
 		if(NOTTOKEN(VARIABLE)){ ERROR_(VARIABLE); delete tree; return NULL; }
 		TreeNode *leaf= new TreeNode(tkn.GetLine(),
 							         tkn.GetColumn(),
 									 tkn.GetToken(),
-									 tkn.TokenValue());
+									 tkn.TokenValue());		
 		tree->PushChild(leaf);
 		//next
 		tkn.NextToken();
+		}while(ISTOKEN(COMMA));
+
 		return tree;
 	}
 
@@ -843,17 +849,11 @@
 							        tkn.GetColumn(),
 									tkn.GetToken(),
 									tkn.TokenValue());
-		//LPR '(' ?
-		tkn.NextToken();
-		if(NOTTOKEN(LPR)){ ERROR_(LPR);  delete tree; return NULL; }
 		//<exp>
 		tkn.NextToken();
 		if(NOT(leaf=ParseExp())){ delete tree; return NULL; }
 		tree->PushChild(leaf);
-		//RPR ')' ? 
-		if(NOTTOKEN(RPR)){ ERROR_(RPR); delete tree; return NULL; }
 		//
-		tkn.NextToken();
 		return tree;
 	}
 

@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{B4E53C67-DC4F-433F-B4E4-1CDE8DCE9313}</ProjectGuid>
-    <RootNamespace>lbEngine</RootNamespace>
+    <ProjectGuid>{587845AA-DE12-4DB1-935F-AF181A5A4307}</ProjectGuid>
+    <RootNamespace>VMCpp</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -62,41 +62,39 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="LbApi.cxx" />
-    <ClCompile Include="LbError.cxx" />
-    <ClCompile Include="LbFunction.cxx" />
-    <ClCompile Include="LbString.cxx" />
-    <ClCompile Include="LbVariable.cxx" />
+    <ClCompile Include="LbError.cpp" />
+    <ClCompile Include="LbFunction.cpp" />
+    <ClCompile Include="LbType.h" />
+    <ClCompile Include="LbVariable.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parse\ErrorParse.cpp" />
+    <ClCompile Include="Parse\GenByteCode.cpp" />
     <ClCompile Include="Parse\IntCode.cpp" />
+    <ClCompile Include="Parse\ParseTree.cpp" />
     <ClCompile Include="Parse\SemanticsChecking.cpp" />
     <ClCompile Include="Parse\SyntaxTree.cpp" />
-    <ClCompile Include="Parse\ParseTree.cpp" />
     <ClCompile Include="Parse\Tokenizer.cpp" />
     <ClCompile Include="Parse\TreeNode.cpp" />
-    <ClCompile Include="VMliteB.cxx" />
+    <ClCompile Include="UtilityString.cpp" />
+    <ClCompile Include="VMCpp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LbApi.h" />
-    <ClInclude Include="LbBycode.h" />
+    <ClInclude Include="LbBytecode.h" />
     <ClInclude Include="LbError.h" />
     <ClInclude Include="LbFunction.h" />
-    <ClInclude Include="LbString.h" />
-    <ClInclude Include="LbType.h" />
     <ClInclude Include="LbVariable.h" />
     <ClInclude Include="Parse\ErrorParse.h" />
     <ClInclude Include="Parse\GenByteCode.h" />
     <ClInclude Include="Parse\IntCode.h" />
-    <ClInclude Include="Parse\SemanticsChecking.h" />
-    <ClInclude Include="Parse\SyntaxTree.h" />
     <ClInclude Include="Parse\Map.h" />
     <ClInclude Include="Parse\ParseTree.h" />
+    <ClInclude Include="Parse\SemanticsChecking.h" />
+    <ClInclude Include="Parse\SyntaxTree.h" />
     <ClInclude Include="Parse\Table.h" />
     <ClInclude Include="Parse\Tokenizer.h" />
     <ClInclude Include="Parse\TreeNode.h" />
-    <ClInclude Include="Parse\UtilityString.h" />
-    <ClInclude Include="VMliteB.h" />
+    <ClInclude Include="UtilityString.h" />
+    <ClInclude Include="VMCpp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="test.pl" />

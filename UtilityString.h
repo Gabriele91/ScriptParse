@@ -10,6 +10,7 @@ namespace String{
 		br << dato;
 		return br.str();
 	}
+	extern double ToFloat(const std::string& str);
 }
 
 #endif

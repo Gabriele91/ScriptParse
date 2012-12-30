@@ -1,16 +1,19 @@
 
-def a(x){ 	
-	global a
-	a=5+x
+b=1
+for(a=1,a<6,a=a+1){
+	b=b*a
+}
+
+def _H(){
+	def b(){ return 10 }
+	global a,b
 	tmp_a=a
-	def l(){
-		return ("ciao")
-	}
-	if(a>9){ return(l()) }
-	local a
-	return (a(tmp_a))
+	a=b
+	b=tmp_a
+	local b,a
+	return b()+a
 }
 
 
-a=a(0)
-
+a="ciao"
+b=_H()

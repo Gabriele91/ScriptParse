@@ -2,7 +2,6 @@
 #define TABLE_TREE
 
 #include "Map.h"
-#include "UtilityString.h"
 #include "ErrorParse.h"
 #include "TreeNode.h"
 

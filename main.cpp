@@ -5,11 +5,8 @@
 #include "Parse/ParseTree.h"
 #include "Parse/IntCode.h"
 #include "Parse/GenByteCode.h"
+#include "VMCpp.h"
 
-//#define TEST_VM
-#define TEST_PARSE
-
-#ifdef TEST_PARSE
 std::string GetStringToken(Tokenizer::Token token){
 
 	switch (token)
@@ -112,6 +109,39 @@ std::string GetStringToken(Tokenizer::Token token){
 }
 
 int main(){
+
+	
+	/*
+	LbVM test;
+	LbBytecode testbt;
+	
+	LbFunction fun;
+	fun.locals=2;
+	fun.args=0;	
+	fun.PushCommands(LbLineCommands(1,3,LB_LOADARG,0));
+	fun.PushCommands(LbLineCommands(1,5,LB_LOADCONST,10.0));
+	fun.PushCommands(LbLineCommands(1,1,LB_ADD,0));
+	fun.PushCommands(LbLineCommands(1,1,LB_RETURN,1));
+
+	testbt.PushFunction(fun);
+	testbt.PushVariable(LbVariable("function",0));
+	testbt.PushVariable(LbVariable("a",1.0f));
+	testbt.PushVariable(LbVariable("c",0.0f));
+	testbt.PushCommands(LbLineCommands(1,3,LB_LOAD,0));
+	testbt.PushCommands(LbLineCommands(1,5,LB_LOAD,1));
+	testbt.PushCommands(LbLineCommands(1,1,LB_CALL,1));
+	testbt.PushCommands(LbLineCommands(1,5,LB_LOADRETURN,0));
+	testbt.PushCommands(LbLineCommands(1,1,LB_SAVE,2));
+	
+
+
+	test.Init(&testbt);
+
+	if(!test.Execute()){
+		std::cout<<test.GetLbError().ToString();
+		system("pause");
+	}
+	*/
 	std::ifstream t("test.pl");
 	std::string scriptexp((std::istreambuf_iterator<char>(t)),
 						   std::istreambuf_iterator<char>());
@@ -144,83 +174,20 @@ int main(){
 		GenByteCode gen;
 		gen.ParseIntermedieCode(&tobytecode);
 		std::cout <<"\n\n"<<tobytecode.ToStringBasic();
-		LbBytecode *bytecode=gen.AllocLbBytecode();
-		VMliteB *liteB=VMliteB_Create(bytecode->commands,bytecode->lenCommands,
-									  bytecode->variables,bytecode->variablescount,
-									  bytecode->functions,bytecode->functionscount);
-		VMliteB_Exec(liteB);
-		VMliteB_Print(liteB);
-		VMliteB_Free(liteB);
+		LbBytecode *bytecode=gen.AllocLbBytecode();		
+		LbVM vmscript;
+		vmscript.Init(bytecode);
+		if(!vmscript.Execute()){
+			std::cout<<vmscript.GetLbError().ToString();
+			system("pause");
+			return 0;
+		}
 	}
 	else{
 		std::cout << parse.ErrorsToString();
 	}
 	
 	system("pause");
+
 	return 0;
-
 }
-#endif
-
-/* TEST VM */
-
-#ifdef TEST_VM
-#include "VMliteB.h"
-#include <string>
-
-extern void PrintTestMain();
-
-LbLineCommands program[]={	
-   /*0 */ {0,LB_GOTO,15}, //TO MAIN
-   ////////////////////////////////////////////////////////////////
-   ////////////////////////////////////////////////////////////////
-   /*1 */ {0,LB_LOADARG,0},   //LOAD ARG0
-   /*2 */ {0,LB_LOADARG,0},   //RE LOAD ARG0
-   /*3 */ {0,LB_ADD,0},       //STACK[0]<-arg+arg
-   /*4 */ {0,LB_SAVELOCAL,0}, //LOCAL[0]<-STACK[0]
-   ////////////////////////////////////////////////////
-   /*5 */ {0,LB_LOADLOCAL,0},	   //LOCAL[0] (arg+arg)
-   /*6 */ {0,LB_LOADCONST,100},    //LOAD 100.0
-   /*7 */ {0,LB_LT,0},             //arg+arg < 100.0
-   /*8 */ {0,LB_IF0,11},           //if(!(arg+arg < 100.0)) return
-   /*9 */ {0,LB_LOADLOCAL,0},      //STACK[1]=LOCAL[0] (arg+arg)
-   /*10 */{0,LB_RETURN,0},         //RETURN   
-   ////////////////////////////////////////////////////
-   /*11 */ {0,LB_LOAD,0},     //LOAD FUNCTION STACK[0]=val[0]
-   /*12 */ {0,LB_LOADLOCAL,0},//STACK[1]=LOCAL[0] (arg+arg)
-   /*13 */ {0,LB_CALL,1},     //CALL FUNCTION val[0] 1 arg
-   /*14 */ {0,LB_RETURN,0},   //RETURN   
-   ////////////////////////////////////////////////////////////////
-   ////////////////////////////////////////////////////////////////
-   /*15 */ {0,LB_LOAD,0}, //LOAD FUNCTION val[0]
-   /*16 */ {0,LB_LOAD,1}, //LOAD VAR val[1]
-   /*17 */ {0,LB_CALL,1}, //CALL FUNCTION, 1 arg
-   /*18 */ {0,LB_SAVE,1}, //SAVE RETURN to val[1]
-};
-
-
-int main(){
-    LbVariable vlist[2];
-	LbVariable_SetFunction(&vlist[0],0);
-    LbVariable_SetNumber(&vlist[1],5.0);
-	LbFunction funList[1];
-	//////////////////////////////
-	funList[0].args=1;
-	funList[0].lineCode=1;
-	funList[0].locals=1;
-	funList[0].rcount=1;
-	//////////////////////////////
-
-
-
-    VMliteB *liteB=VMliteB_Create(program,sizeof(program)/sizeof(LbLineCommands),
-                                  vlist  ,sizeof(vlist)/sizeof(LbVariable),
-								  funList,sizeof(funList)/sizeof(LbFunction));
-    VMliteB_Exec(liteB);
-    VMliteB_Print(liteB);
-    VMliteB_Free(liteB);
-	*/
-
-    return 0;
-}
-#endif

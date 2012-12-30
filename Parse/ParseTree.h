@@ -1,7 +1,6 @@
 #ifndef PARSE_TREE_H
 #define PARSE_TREE_H
 
-#include "UtilityString.h"
 #include "Table.h"
 #include "SyntaxTree.h"
 #include "SemanticsChecking.h"

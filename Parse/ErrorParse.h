@@ -1,7 +1,6 @@
 #ifndef ERROR_PERSE_H
 #define ERROR_PERSE_H
 
-#include "UtilityString.h"
 #include <vector>
 
 /**

@@ -202,15 +202,13 @@ void ToIntCode::GenInitBitecode(std::vector<ToIntCode::IntCode>& intCode,
 			tmp.isconst=false;
 			intCode.push_back(tmp);
 			if(node->info==TreeNode::IS_CALL){
-				//first arg is function (repush, for recall)
-				intCode.push_back(tmp);
 				//push args
 				for(int i=0;i<node->Size();++i){
 					GenInitBitecode(intCode,(*node)[i],labelcount,labelcountif);
 				}
 				//push call
 				tmp.opcode=LB_CALL;
-				tmp.name=String::ToString(node->Size()+1);
+				tmp.name=String::ToString(node->Size());
 				tmp.isconst=false;
 				intCode.push_back(tmp);
 				//if a parent is no a def|if[elif|else]|for|do|while or root:
@@ -634,7 +632,7 @@ void ToIntCode::MathOptimizazione(std::vector<ToIntCode::IntCode>& intCode){
 	}
 /*                                            */
 std::string ToIntCode::PrintIniCode(ToIntCode::IntCode intcode,int asm_line){
-		std::string code;
+		std::string code=LbCommandsString[30];
 		code+="{ "+String::ToString(intcode.line)+" | "+
 				   String::ToString(asm_line)+" | "+
 				   String::ToString(intcode.token)+" | "+

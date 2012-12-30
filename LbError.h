@@ -1,86 +1,82 @@
 #ifndef LBERROR_H
 #define LBERROR_H
 
-
 #include "LbType.h"
-#include "LbString.h"
-/**
-* Class error
-* @addtogroup LbError
-* @{
-*/
 
-enum EnLbValueError{
-        VALUE_AN_ERROR=1,
-        VALUE_NO_ERROR=0
+class LbError{
+	
+	public:	
+
+	enum LbErrorType{
+		LB_STACK=0,
+		LB_CONTEXT,
+
+	    LB_LOADCONST,
+        LB_LOAD,
+        LB_PUSH,
+        LB_LPUSH,
+
+        LB_SAVE,
+        LB_POP,
+
+        LB_CMD,
+        LB_ADD,
+        LB_MIN,
+        LB_MUL,
+        LB_DIV,
+		
+        LB_EQ,
+        LB_NOTEQ,
+        LB_GTEQ,
+        LB_LTEQ,
+        LB_GT,
+        LB_LT,
+
+        LB_AND,
+        LB_OR,
+        LB_NOT,
+
+        LB_IF,
+        LB_IF0,
+        LB_GOTO,
+        LB_EXIT,
+
+		//function
+		LB_CALL,
+		LB_LOADCALL,
+		LB_LOADLOCAL,
+		LB_LOADARG,
+		LB_SAVELOCAL,
+		LB_SAVEARG,
+		LB_RETURN,
+		LB_LOADRETURN
+	};
+
+
+	DFORCEINLINE uint Size(){ return errors.size();  }
+	DFORCEINLINE void Clear(){ errors.clear(); }
+
+	void PushError(LbErrorType error,
+				   unsigned int line, 
+				   unsigned int column,
+				   unsigned int asmline, 
+				   const std::string& addictioninfo);
+
+
+	std::string ToString();
+	
+	private:
+
+	struct Error{ 
+				LbErrorType   error;
+				unsigned int  line;
+				unsigned int  column; 
+				unsigned int  asmline; 
+				std::string   addictioninfo;
+			};
+	std::vector<Error> errors;
+	static const char *ErrorString[];
 };
 
-enum EnLbErrorLog{
-        ERROR_LOAD=0,
-        ERROR_PUSH,
-        ERROR_SAVE,
-        /////////////
-        ERROR_ADD,
-        ERROR_MIN,
-        ERROR_MUL,
-        ERROR_DIV,
-        /////////////
-        ERROR_EQ,
-        ERROR_NOTEQ,
-        ERROR_GTEQ,
-        ERROR_LTEQ,
-        ERROR_GT,
-        ERROR_LT,
-        /////////////
-        ERROR_AND,
-        ERROR_OR,
-        ERROR_NOT,
-        /////////////
-        ERROR_1ARG,
-        ERROR_2ARG,
-        ERROR_3ARG
-};
 
-
-//an error node
-typedef
-struct LbErrorNode{
-        uint id;
-        uint line;
-        uint asmline;
-        struct  LbErrorNode* next;
-}LbErrorNode;
-typedef
-struct LbError{
-
-    LbErrorNode *first;
-    LbErrorNode *last;
-    uint count;
-
-}LbError;
-
-extern const char *LbErrorLog[];
-
-/**
-* Init LbError (error list)
-* @param LbError pointer
-*/
-void LbError_Init(LbError *ptr);
-/**
-* Push an error
-* @param LbError pointer
-* @param uint (id error)
-* @param uint (line error)
-*/
-void LbError_Push(LbError *ptr,uint id,uint line,uint asmline);
-/**
-* Delete all'error in LbError
-* @param LbError pointer
-*/
-void LbError_Clean(LbError *ptr);
-/**
-* @}
-*/
-
-
-#endif 
+#endif

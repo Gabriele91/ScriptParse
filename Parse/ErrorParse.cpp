@@ -1,4 +1,5 @@
 #include "ErrorParse.h"
+#include "../UtilityString.h"
 
 void ErrorParse::PushError(unsigned int line,
 						   unsigned int column,

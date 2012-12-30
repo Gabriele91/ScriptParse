@@ -1,5 +1,5 @@
 #include "TreeNode.h"
-
+#include "../UtilityString.h"
 
 TreeNode::TreeNode()
 			:line(0)

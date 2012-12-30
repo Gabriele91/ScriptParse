@@ -1,7 +1,6 @@
 #ifndef SYNTAX_TREE_H
 #define SYNTAX_TREE_H
 
-#include "UtilityString.h"
 #include "Tokenizer.h"
 #include "TreeNode.h"
 #include "ErrorParse.h"
@@ -39,11 +38,11 @@
     *  <statement_do> := do '{' [{<statement>}] '}'  while '(' <exp> ')'
     *  <statement_assignament> := <VARIABLE> '=' <exp>
     *  <statement_function> := 'def' <VARIABLE> ['(' [<ARGS>] ')']'{' [{<statement>}] '}'
-    *  <statement_return>    := 'return' '(' <exp> ')'
+    *  <statement_return>    := 'return' <exp>
     *  <statement_break>    := 'break'
     *  <statement_continue>    := 'continue'
-    *  <statement_global>    := 'global' <VARIABLE>
-    *  <statement_local>    := 'local' <VARIABLE>
+    *  <statement_global>    := 'global' <VARIABLE>{','<VARIABLE>}
+    *  <statement_local>    := 'local' <VARIABLE>{','<VARIABLE>}
     *  <call> :=  <VARIABLE> '(' <exp>  { ',' <exp> } ')'
     *  <ARGS> :=  <VARIABLE> { ',' <VARIABLE> }
     *
