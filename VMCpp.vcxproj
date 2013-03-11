@@ -75,6 +75,7 @@
     <ClCompile Include="Parse\SyntaxTree.cpp" />
     <ClCompile Include="Parse\Tokenizer.cpp" />
     <ClCompile Include="Parse\TreeNode.cpp" />
+    <ClCompile Include="TinyScript.cpp" />
     <ClCompile Include="UtilityString.cpp" />
     <ClCompile Include="VMCpp.cpp" />
   </ItemGroup>
@@ -93,6 +94,7 @@
     <ClInclude Include="Parse\Table.h" />
     <ClInclude Include="Parse\Tokenizer.h" />
     <ClInclude Include="Parse\TreeNode.h" />
+    <ClInclude Include="TinyScript.h" />
     <ClInclude Include="UtilityString.h" />
     <ClInclude Include="VMCpp.h" />
   </ItemGroup>

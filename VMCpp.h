@@ -213,6 +213,9 @@ class LbVM{
 	DFORCEINLINE short GetTopArgs(){
 		return topstackfunction;
 	}
+	DFORCEINLINE LbVariable& GetArg(int i){
+		return StackAt(topstackfunction-i);
+	}
 
 	LbVM();
 	void Init(LbBytecode *bytecode);

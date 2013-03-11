@@ -7,10 +7,10 @@ TreeNode* ParseTree::StartParse(std::string &script){
 		}
 		return tree;
 	}
-std::string ParseTree::ErrorsToString(){
+std::string ParseTree::ErrorsToString() const{
 		return errors.ToString();
 	}	
-bool ParseTree::FindErrors(){
+bool ParseTree::FindErrors() const{
 		return errors.errors.size();
 	}
 ErrorParse& ParseTree::GetErrors(){

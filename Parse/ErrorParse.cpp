@@ -13,7 +13,7 @@ void ErrorParse::PushError(unsigned int line,
 		errors.push_back(error);
 	}
 
-std::string ErrorParse::ToString(){
+std::string ErrorParse::ToString() const{
 	std::string out;
 	for(int i=0;i<errors.size();++i){
 		out+="error:"

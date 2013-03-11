@@ -14,8 +14,8 @@ class ParseTree
 public:
 
 	TreeNode* StartParse(std::string &script);
-	std::string ErrorsToString();	
-	bool FindErrors();
+	std::string ErrorsToString() const;	
+	bool FindErrors() const;
 	ErrorParse& GetErrors();
 
 	ParseTree(){};

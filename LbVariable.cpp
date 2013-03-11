@@ -123,16 +123,17 @@ bool LbVariable::Add(const LbVariable &ptr){
 		var.number+=ptr.var.number;
 		return true;
 	}
-	if(IsString() && ptr.IsString()){
+	else if(IsString() && ptr.IsString()){
 		string+=ptr.string;
 		return true;
 	}
-	if(IsString() && ptr.IsNumber()){
+	else if(IsString() && ptr.IsNumber()){
 		string+=String::ToString(ptr.var.number);
 		return true;
 	}
-	if(IsNumber() && ptr.IsString()){
+	else if(IsNumber() && ptr.IsString()){
 		string=String::ToString(var.number)+ptr.string;
+		type=STRING;
 		return true;
 	}
 	return false;

@@ -62,17 +62,32 @@ struct GenByteCode{
 	DUNORDERED_MAP<std::string,Function> global_function_map;
 	typedef DUNORDERED_MAP<std::string,Function>::iterator  mapfunctionit;
 	typedef std::pair<std::string,Function>  mapfunctioninsert;
+	/* map cfunctions */
+	struct VCfunction{ 
+		std::string name;
+		int id_var;
+		LbCfunction fn; 
+		VCfunction():id_var(-1),fn(NULL){}
+		VCfunction(const std::string& name,int id_var,LbCfunction f):name(name),id_var(id_var),fn(f){}
+	};
+	DUNORDERED_MAP<std::string,VCfunction> global_cfunction_map;
+	typedef DUNORDERED_MAP<std::string,VCfunction>::iterator  mapcfunctionit;
+	typedef std::pair<std::string,VCfunction>  mapcfunctioninsert;
 	/* opcode */
 	ToIntCode *intermediecode;
 
 	GenByteCode(){}
 	void ParseIntermedieCode(ToIntCode *itc);
 	LbBytecode* AllocLbBytecode();
+	void PushCFunction(const std::string& name,LbCfunction fun){
+		global_cfunction_map[name]=VCfunction(name,global_cfunction_map.size(),fun);	
+	}
 
-	void InitCommands(std::vector<LbLineCommands>& commands,
-					  std::vector<ToIntCode::IntCode>& itc);
 
 protected:
+	
+	void InitCommands(std::vector<LbLineCommands>& commands,
+					  std::vector<ToIntCode::IntCode>& itc);
 
 	void SetVariableGlobalMap(int& id_var_count,
 							  std::vector<ToIntCode::IntCode>& itc);

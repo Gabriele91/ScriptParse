@@ -1,12 +1,14 @@
 #include "GenByteCode.h"
-
+#include <set>
 void GenByteCode::ParseIntermedieCode(ToIntCode *itc){
 		this->intermediecode=itc;
+		//step 0: set count variable
+		int count_global_vars=global_cfunction_map.size()+//c function
+							  itc->functions.size()-1;//script function
 		//step 1, vector<function> to map
-		int count_global_vars=itc->functions.size()-1;
 		for(int i=0 ;i<itc->functions.size();++i){
 			Function tmp;
-			tmp.id_var=i;
+			tmp.id_var=global_cfunction_map.size()+i;
 			tmp.funroot=itc->functions[i].root;
 			tmp.name=itc->functions[i].name;
 			tmp.intcode=&(itc->functions[i].intCode);
@@ -48,6 +50,21 @@ void GenByteCode::ParseIntermedieCode(ToIntCode *itc){
 		}
 
 	}
+
+typedef bool  ( *hFCVars ) (GenByteCode::Variable* lhs,GenByteCode::Variable*  rhs);
+bool compareVars (GenByteCode::Variable* lhs,GenByteCode::Variable*  rhs) {
+	return lhs->id_var<rhs->id_var;
+}
+typedef bool  ( *hFCCFunctions ) (GenByteCode::VCfunction* lhs,GenByteCode::VCfunction*  rhs);
+bool compareCFunctions (GenByteCode::VCfunction* lhs,GenByteCode::VCfunction*  rhs) {
+	return lhs->id_var<rhs->id_var;
+}
+typedef bool  ( *hFCFunctions ) (GenByteCode::Function* lhs,GenByteCode::Function*  rhs);
+bool compareFunctions (GenByteCode::Function* lhs,GenByteCode::Function*  rhs) {
+	return lhs->id_var<rhs->id_var;
+}
+
+
 LbBytecode* GenByteCode::AllocLbBytecode(){
 		LbBytecode *out=new LbBytecode();
 		/* global opcode */
@@ -61,18 +78,54 @@ LbBytecode* GenByteCode::AllocLbBytecode(){
 			out->GetLastPush().locals=(*it).second.local_map.size();
 			InitCommands(out->GetLastPush().commands,*(*it).second.intcode);
 		}
-		/* set variable */
+		/* set variable */		
+		//cfunction
+		//=========================================================================================
+		//create set:
+		std::set<GenByteCode::VCfunction*,hFCCFunctions> setcfunction(compareCFunctions);
+		for(mapcfunctionit it=global_cfunction_map.begin();
+			it!=global_cfunction_map.end();it++){
+				setcfunction.insert(&(*it).second);
+		} 
+		//set cfunction script
+		for (std::set<GenByteCode::VCfunction*,hFCCFunctions> ::iterator it=setcfunction.begin(); 
+			 it!=setcfunction.end();
+			 ++it){				
+				out->PushVariable(LbVariable((*it)->name,(*it)->fn));
+		}
+		//=========================================================================================
+		//function
+		//set function script	
+		std::set<GenByteCode::Function*,hFCFunctions> setfunction(compareFunctions);
 		for(mapfunctionit it=global_function_map.begin();
 			it!=global_function_map.end();it++){
-			out->PushVariable(LbVariable((*it).second.name,(*it).second.id_var));
+				setfunction.insert(&(*it).second);
+		} 
+		int count_function=0;	
+		for (std::set<GenByteCode::Function*,hFCFunctions> ::iterator it=setfunction.begin(); 
+			 it!=setfunction.end();
+			 ++it){
+
+			out->PushVariable(LbVariable((*it)->name,count_function++));
 		}
+	    //=========================================================================================
+		//variable
+		//create global variable set:
+		std::set<GenByteCode::Variable*,hFCVars> setvariable(compareVars);
 		for(mapvariableit it=global_variable_map.begin();
 			it!=global_variable_map.end();it++){
-				if((*it).second.is_string)
-					out->PushVariable(LbVariable("$string",(*it).second.value));
+				setvariable.insert(&(*it).second);
+		} 
+		//set variable
+		for (std::set<GenByteCode::Variable*,hFCVars>::iterator it=setvariable.begin(); 
+			 it!=setvariable.end();
+			 ++it){
+				if((*it)->is_string)
+					out->PushVariable(LbVariable("$string",(*it)->value));
 				else
-					out->PushVariable(LbVariable((*it).second.value,0.0f));
+					out->PushVariable(LbVariable((*it)->value,0.0f));
 		}
+		//=========================================================================================
 		return out;
 	}
 
@@ -96,6 +149,12 @@ void GenByteCode::SetVariableGlobalMap(int& id_var_count,
 		for(int i=0;i<itc.size();++i){
 			if(itc[i].opcode==LB_LOAD || 
 			   itc[i].opcode==LB_SAVE){				   
+				/* search in cfunctions names */ 
+				mapcfunctionit itcfn=global_cfunction_map.find(itc[i].name);
+				if(itcfn!=global_cfunction_map.end()){
+					itc[i].name=String::ToString((*itcfn).second.id_var);
+					continue;
+				}				   
 				/* search in functions names */ 
 				mapfunctionit itfn=global_function_map.find(itc[i].name);
 				if(itfn!=global_function_map.end()){
@@ -157,6 +216,12 @@ void GenByteCode::SetVariableFunctionMap(int& id_var_count,
 					}
 					//if is not a string...
 					if(itc[i].token!=Tokenizer::STRING){
+						/* search in cfunctions names */ 
+						mapcfunctionit itcfn=global_cfunction_map.find(itc[i].name);
+						if(itcfn!=global_cfunction_map.end()){
+							itc[i].name=String::ToString((*itcfn).second.id_var);
+							continue;
+						}
 						/* search in functions names, if is a call */ 
 						if(!itc[i].isconst){ //function isn't a const (or a string)
 							mapfunctionit itfn=global_function_map.find(itc[i].name);
@@ -198,8 +263,13 @@ void GenByteCode::SetVariableFunctionMap(int& id_var_count,
 					continue;
 				}
 				/* search in functions names, if is a call */ 
-				if(itc[i].info==TreeNode::IS_CALL||itc[i].name[0]=='$'){					
-
+				if(itc[i].info==TreeNode::IS_CALL||itc[i].name[0]=='$'){	
+					/* search in cfunctions names */ 
+					mapcfunctionit itcfn=global_cfunction_map.find(itc[i].name);
+					if(itcfn!=global_cfunction_map.end()){
+				 	    itc[i].name=String::ToString((*itcfn).second.id_var);
+						continue;
+					}
 					/* or other function */
 					mapfunctionit itfn=global_function_map.find(itc[i].name);
 					if(itfn!=global_function_map.end()){

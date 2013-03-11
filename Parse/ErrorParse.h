@@ -75,7 +75,7 @@ struct ErrorParse{
 				   unsigned char errorType, 
 				   const std::string& addictioninfo);
 
-	std::string ToString();
+	std::string ToString() const;
 
 };
 

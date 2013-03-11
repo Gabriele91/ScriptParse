@@ -66,6 +66,9 @@
     <ClCompile Include="Parse\GenByteCode.cpp">
       <Filter>File di origine\Parse</Filter>
     </ClCompile>
+    <ClCompile Include="TinyScript.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VMCpp.h">
@@ -115,6 +118,9 @@
     </ClInclude>
     <ClInclude Include="UtilityString.h">
       <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="TinyScript.h">
+      <Filter>File di origine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
