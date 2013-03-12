@@ -8,12 +8,14 @@ def fibonacci(i){
 i=10
 c=fibonacci(i)
 print("fibonacci("+i+")->"+c)
-system("pause")
+qualcosa=input("scrivi qualcosa:")
+print(qualcosa)
 
 file=openfile("file_test.txt","w")
 	writefile(file,"fibonacci("+i+")->"+c)
 closefile(file)
-system("pause")
+qualcosa=input("scrivi qualcosa:")
+print(qualcosa)
 
 y=""
 for(a=1,a<c,a=a+1){ 
@@ -28,4 +30,5 @@ for(a=1,a<c,a=a+1){
 file=openfile("file_test2.txt","w")
 	writefile(file,y)
 closefile(file)
-system("pause")
+qualcosa=input("scrivi qualcosa:")
+print(qualcosa)

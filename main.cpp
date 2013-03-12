@@ -22,6 +22,23 @@ int VM_print(LbVM *vm){
 	std::cout << std::endl;
 	return 0;
 }
+int VM_input(LbVM *vm){
+	for(int i=1;i<=vm->GetTopArgs();++i){
+		if(vm->GetArg(i).IsString())
+			std::cout << vm->GetArg(i).GetString();
+		else if(vm->GetArg(i).IsNumber())
+			std::cout << String::ToString(vm->GetArg(i).GetNumber());
+		else{
+			vm->PushError(LbError::LB_CALL,
+				std::string("print, invalid tipe arg:")+String::ToString(i));
+		}
+	}
+	std::cout << std::endl;
+	std::string valuein;
+	std::cin >> valuein;
+	vm->SetReturn(LbVariable("$const",valuein));
+	return 0;
+}
 int VM_system(LbVM *vm){
 	if(vm->GetTopArgs()!=1) 
 		vm->PushError(LbError::LB_CALL,"system, invalid args number");	
@@ -140,6 +157,7 @@ int main(){
 						   std::istreambuf_iterator<char>());
 	//inizialize script
 	TinyScript tiny;
+	tiny.PushCFunction("input",VM_input);
 	tiny.PushCFunction("print",VM_print);
 	tiny.PushCFunction("system",VM_system);
 	tiny.PushCFunction("openfile",VM_openfile);
