@@ -1,13 +1,16 @@
-# Compiled Object files
+*.obj
+*.exe
 *.slo
 *.lo
-*.o
-
-# Compiled Dynamic libraries
 *.so
 *.dylib
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
+*.o
+*.dll
+*.depend
+*.layout
+Debug
+bin
+obj

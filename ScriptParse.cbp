@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="ScriptParse" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin\Debug\ScriptParse" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-std=gnu++0x" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin\Release\ScriptParse" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="LbBytecode.h" />
+		<Unit filename="LbError.cpp" />
+		<Unit filename="LbError.h" />
+		<Unit filename="LbFunction.cpp" />
+		<Unit filename="LbFunction.h" />
+		<Unit filename="LbType.h" />
+		<Unit filename="LbVariable.cpp" />
+		<Unit filename="LbVariable.h" />
+		<Unit filename="Parse\ErrorParse.cpp" />
+		<Unit filename="Parse\ErrorParse.h" />
+		<Unit filename="Parse\GenByteCode.cpp" />
+		<Unit filename="Parse\GenByteCode.h" />
+		<Unit filename="Parse\IntCode.cpp" />
+		<Unit filename="Parse\IntCode.h" />
+		<Unit filename="Parse\Map.h" />
+		<Unit filename="Parse\ParseTree.cpp" />
+		<Unit filename="Parse\ParseTree.h" />
+		<Unit filename="Parse\SemanticsChecking.cpp" />
+		<Unit filename="Parse\SemanticsChecking.h" />
+		<Unit filename="Parse\SyntaxTree.cpp" />
+		<Unit filename="Parse\SyntaxTree.h" />
+		<Unit filename="Parse\Table.h" />
+		<Unit filename="Parse\Tokenizer.cpp" />
+		<Unit filename="Parse\Tokenizer.h" />
+		<Unit filename="Parse\TreeNode.cpp" />
+		<Unit filename="Parse\TreeNode.h" />
+		<Unit filename="TinyScript.cpp" />
+		<Unit filename="TinyScript.h" />
+		<Unit filename="UtilityString.cpp" />
+		<Unit filename="UtilityString.h" />
+		<Unit filename="VMCpp.cpp" />
+		<Unit filename="VMCpp.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="test.pl" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

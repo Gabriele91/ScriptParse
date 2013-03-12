@@ -2,7 +2,7 @@
 #define ERROR_PERSE_H
 
 #include <vector>
-
+#include <string>
 /**
 *  Class management errors
 */
@@ -56,23 +56,23 @@ struct ErrorParse{
 				COMMA,
 				END,
 				INVALID,
-				NONE     
+				NONE
 
 
             };
-	struct Error{ 
+	struct Error{
 				unsigned int line;
-				unsigned int column; 
+				unsigned int column;
 				unsigned char error;
 				std::string   addictioninfo;
 			};
-	
+
 	std::vector<Error> errors;
 	static const char *ErrorString[];
 
-	void PushError(unsigned int line, 
-				   unsigned int column, 
-				   unsigned char errorType, 
+	void PushError(unsigned int line,
+				   unsigned int column,
+				   unsigned char errorType,
 				   const std::string& addictioninfo);
 
 	std::string ToString() const;

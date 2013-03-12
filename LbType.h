@@ -37,9 +37,13 @@ typedef void (*LbFnCommands) (LbVM*);
 	#define VMB_SIZE_CONTEXT 1024
 #endif
 
-#define DINLINE __inline
-#define DFORCEINLINE __forceinline
-
+#ifdef _MSC_VER
+        #define DINLINE __inline
+        #define DFORCEINLINE __forceinline
+    #else
+        #define DINLINE inline
+        #define DFORCEINLINE inline
+#endif
 
 
 #endif

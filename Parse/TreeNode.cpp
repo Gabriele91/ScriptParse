@@ -4,7 +4,7 @@
 TreeNode::TreeNode()
 			:line(0)
 			,token(Tokenizer::Token::NONE)
-			,name(name)
+			,name("")
 			,parent(0){}
 TreeNode::TreeNode(int line,int column,Tokenizer::Token token,const std::string &name,AdditionalInfo info)
 			:line(line)
@@ -15,7 +15,7 @@ TreeNode::TreeNode(int line,int column,Tokenizer::Token token,const std::string 
 			,parent(0){
 		}
 TreeNode::~TreeNode(){
-		for(int i=0;i<Size();++i) 
+		for(int i=0;i<Size();++i)
 			 delete childs[i];
 }
 
@@ -34,14 +34,14 @@ void TreeNode::RemoveChild(TreeNode* in){
 		}
 int TreeNode::IndexChild(TreeNode* in){
 		for(int i=0;i<Size();++i) if(childs[i]==in) return i;
-		return -1;		
+		return -1;
 }
 void TreeNode::RemoveChild(int i){
 			if(i<Size())
 				childs.erase(childs.begin()+i);
 		}
 void TreeNode::Change(int line,int column,Tokenizer::Token token,const std::string &name){
-			this->name=name; 
+			this->name=name;
 			this->line=line;
 			this->column=column;
 			this->token=token;
@@ -51,7 +51,7 @@ int TreeNode::Size() const{
 		}
 TreeNode*& TreeNode::operator[](int i){
 			return childs[i];
-		}		
+		}
 TreeNode*  TreeNode::operator[](int i) const{
 		return childs[i];
 }

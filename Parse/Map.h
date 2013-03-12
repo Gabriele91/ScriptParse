@@ -1,7 +1,7 @@
 #ifndef __MAP_H //__ (include <map> header)
 #define __MAP_H
 
-#if defined(__APPLE__) || defined(ANDROID)
+#if defined(__APPLE__) || defined(ANDROID) || defined(__linux) || defined(__GNUC__)
 # include <tr1/unordered_map>
 #else
 # include <unordered_map>

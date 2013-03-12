@@ -3,7 +3,9 @@
 
 #include "../VMCpp.h"
 #include "../UtilityString.h"
-#include <vector>
+#include <string>
+#include <string.h>
+#include <stdlib.h>
 #include "Table.h"
 #include "SyntaxTree.h"
 #include "ParseTree.h"
@@ -29,15 +31,15 @@ struct ToIntCode{
 		TreeNode *root;
 		std::vector<IntCode> intCode;
 	};
-	
+
 	TreeNode *root;
 	std::vector<IntCode> intCode;
 	std::vector<Function> functions;
 	public:
-		
+
 
 	ToIntCode();
-	std::string ToString();	
+	std::string ToString();
 	std::string ToStringBasic();
 	void ParseTree(TreeNode* node);
 
@@ -46,7 +48,7 @@ protected:
 	void GetFunctionAndReplaceWithVariabe(TreeNode* node);
 	void GenInitBitecode(std::vector<IntCode>& intCode,TreeNode* node,
 						 int& labelcount,
-						 int& labelcountif);	
+						 int& labelcountif);
 	/* Constant Folding + lite math optimizazione */
 	void MathOptimizazione(std::vector<IntCode>& intCode);
 	/*                                            */

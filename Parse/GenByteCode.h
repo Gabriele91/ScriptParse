@@ -2,6 +2,9 @@
 #define GEN_BYTE_CODE_H
 
 #include <vector>
+#include <string>
+#include <string.h>
+#include <stdlib.h>
 #include "Map.h"
 #include "IntCode.h"
 #include "../VMCpp.h"
@@ -19,23 +22,23 @@ struct GenByteCode{
 	typedef DUNORDERED_MAP<std::string,Variable>  mapvariable;
 	typedef DUNORDERED_MAP<std::string,Variable>::iterator  mapvariableit;
 	typedef std::pair<std::string,Variable>  mapvariableinsert;
-	/* map label */ 
+	/* map label */
 	typedef DUNORDERED_MAP<std::string,int>  maplabel;
 	typedef DUNORDERED_MAP<std::string,int>::iterator  maplabelit;
 	typedef std::pair<std::string,int>  maplabelinsert;
 	/* map functions */
-	struct Function{	
-		TreeNode *funroot;	
+	struct Function{
+		TreeNode *funroot;
 		std::vector<ToIntCode::IntCode>* intcode;
 		int id_var;
 		std::string name;
 		/* scope */
 		std::vector<TreeNode*> vGlobalLocal;
-		void BuildListGLobalLocal(TreeNode *node=NULL){	
+		void BuildListGLobalLocal(TreeNode *node=NULL){
 			if(node==NULL){ node=funroot; }
 			else
 			if(node->token==Tokenizer::GLOBAL||
-			   node->token==Tokenizer::LOCAL) 
+			   node->token==Tokenizer::LOCAL)
 				vGlobalLocal.push_back(node);
 
 			for(int i=0;i<node->Size();++i){
@@ -51,7 +54,7 @@ struct GenByteCode{
 				for(int v=0;v<(*vGlobalLocal[i]).Size();++v)
 						if(var==(*vGlobalLocal[i])[v]->name)
 								isglobal=vGlobalLocal[i]->token==Tokenizer::GLOBAL;
-				
+
 			}
 			return isglobal;
 		}
@@ -63,10 +66,10 @@ struct GenByteCode{
 	typedef DUNORDERED_MAP<std::string,Function>::iterator  mapfunctionit;
 	typedef std::pair<std::string,Function>  mapfunctioninsert;
 	/* map cfunctions */
-	struct VCfunction{ 
+	struct VCfunction{
 		std::string name;
 		int id_var;
-		LbCfunction fn; 
+		LbCfunction fn;
 		VCfunction():id_var(-1),fn(NULL){}
 		VCfunction(const std::string& name,int id_var,LbCfunction f):name(name),id_var(id_var),fn(f){}
 	};
@@ -80,12 +83,12 @@ struct GenByteCode{
 	void ParseIntermedieCode(ToIntCode *itc);
 	LbBytecode* AllocLbBytecode();
 	void PushCFunction(const std::string& name,LbCfunction fun){
-		global_cfunction_map[name]=VCfunction(name,global_cfunction_map.size(),fun);	
+		global_cfunction_map[name]=VCfunction(name,global_cfunction_map.size(),fun);
 	}
 
 
 protected:
-	
+
 	void InitCommands(std::vector<LbLineCommands>& commands,
 					  std::vector<ToIntCode::IntCode>& itc);
 
