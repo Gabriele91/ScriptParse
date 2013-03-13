@@ -11,6 +11,11 @@
 *.dll
 *.depend
 *.layout
+*.tlog
+*.log
+*.pdb
+*.suo
+*.v11
 Debug
 bin
 obj

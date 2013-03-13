@@ -21,6 +21,23 @@ bool TinyScript::DoStript(const std::string& scr){
 	std::cout <<"\n\n"<<iCode.ToStringBasic();
 	//get bytecode
 	bytecode=bGen.AllocLbBytecode();
+	int i=0;
+	for(auto& v:bytecode->variables){
+		std::cout<< i <<" : " << v.GetName() << " ";
+		if(v.IsNumber())
+			std::cout<< " number:" << v.GetNumber();
+		else if(v.IsString())
+			std::cout<< " string:"<< v.GetString();
+		else if(v.IsFunction())
+			std::cout<< " function:"<< v.GetFunction();
+		std::cout << std::endl;
+		++i;
+	}
+	i=0;
+	for(auto& f:bytecode->function){
+		std::cout<< i <<" : function(" << f.args << ")" << std::endl;
+		++i;
+	}
 	//
 	return true;
 }

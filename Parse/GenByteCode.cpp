@@ -88,7 +88,7 @@ LbBytecode* GenByteCode::AllocLbBytecode(){
 				setcfunction.insert(&(*it).second);
 		} 
 		//set cfunction script
-		for (std::set<GenByteCode::VCfunction*,hFCCFunctions> ::iterator it=setcfunction.begin(); 
+		for (std::set<GenByteCode::VCfunction*,hFCCFunctions>::iterator  it=setcfunction.begin(); 
 			 it!=setcfunction.end();
 			 ++it){				
 				out->PushVariable(LbVariable((*it)->name,(*it)->fn));
@@ -96,17 +96,17 @@ LbBytecode* GenByteCode::AllocLbBytecode(){
 		//=========================================================================================
 		//function
 		//set function script	
+		int count_function=0;	
 		std::set<GenByteCode::Function*,hFCFunctions> setfunction(compareFunctions);
 		for(mapfunctionit it=global_function_map.begin();
 			it!=global_function_map.end();it++){
 				setfunction.insert(&(*it).second);
+				++count_function;
 		} 
-		int count_function=0;	
 		for (std::set<GenByteCode::Function*,hFCFunctions> ::iterator it=setfunction.begin(); 
 			 it!=setfunction.end();
 			 ++it){
-
-			out->PushVariable(LbVariable((*it)->name,count_function++));
+			out->PushVariable(LbVariable((*it)->name,--count_function));
 		}
 	    //=========================================================================================
 		//variable

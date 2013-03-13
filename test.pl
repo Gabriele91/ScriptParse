@@ -1,34 +1,24 @@
 
+def scrivi(x,y){
+	print(x,y)
+}
+
 def fibonacci(i){
 	if(i>1){ return fibonacci(i-1)+fibonacci(i-2) }
 	if(i<0){ return -1 }
 	return i
 }
 
-i=10
-c=fibonacci(i)
-print("fibonacci("+i+")->"+c)
-qualcosa=input("scrivi qualcosa:")
-print(qualcosa)
-
-file=openfile("file_test.txt","w")
-	writefile(file,"fibonacci("+i+")->"+c)
-closefile(file)
-qualcosa=input("scrivi qualcosa:")
-print(qualcosa)
-
-y=""
-for(a=1,a<c,a=a+1){ 
-		y=y+def(x){ 
-					if(toint(x/2)==x/2){ 
-						return ("uguali:"+toint(x/2)+","+x/2)
-					} 
-					return "diversi:"+toint(x/2)+","+x/2
-				  }(a) 
-				  +"\n"
+for(,ex!="si",){
+	val=input("scrivi un numero: ")
+	fib=fibonacci(toint(val))
+	scrivi("fib=",fib)
+	ex=input("vuoi uscire?")
 }
+
+/*
+//Esempio, scrivi su file:
 file=openfile("file_test2.txt","w")
 	writefile(file,y)
 closefile(file)
-qualcosa=input("scrivi qualcosa:")
-print(qualcosa)
+*/
